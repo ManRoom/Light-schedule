@@ -1,0 +1,645 @@
+
+
+import javax.swing.*;
+import javax.swing.table.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.stream.Stream;
+
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        TableDate isStart = new TableDate();
+        isStart.mainFrame();
+        isStart.createTable();
+    }
+
+    static class TableDate extends JTextArea implements ActionListener, TableCellRenderer {
+        public TableDate() {
+         setLineWrap(true);
+         setWrapStyleWord(false);
+         setOpaque(true);
+        }
+        static String stringWrite = "";
+
+        JTable isTable;
+        JFrame isFrame;
+        JPanel isPanel;
+        JTextArea generalLst;
+        JPanel boxLeft;
+        JPanel boxRight;
+        JPanel boxGeneral;
+        JPanel boxGlobal;
+
+        JButton openFormObjects;///+++++
+        JButton openFormNames;///++++++
+        JButton openFormGroups;///+++++
+
+        String dateFromFile = "";
+        JButton saveData;
+        JButton createSchedule;
+
+
+        JTextField isText;
+        JScrollPane pane;
+        JFrame mainFrame;
+
+        JTextField textForGroups;
+        JTextField textForNames;
+        JTextField textForObjects;
+
+        String DataForTable = "";
+
+        JPanel container;
+        String[] listForNames;
+        String[] listForGroups;
+        String[] listForObjects;
+        DefaultTableModel model;
+
+        int linesCount = 0;
+        int lineCountForNames = 0;
+        int linesCountsForGroups = 0;
+        int linesCountsForObjects = 0;
+        String dateForArea = "";
+        String line = "";
+
+        JComboBox<String> boxNames;
+        JComboBox<String> boxGroups;
+        JComboBox<String> boxObjects;
+
+        static final String messageError = "Отсутствует файл";
+        static final String nameErrorObjects = "Дисциплины";
+        static final String nameErrorGroups = "Группы";
+        static final String nameErrorNames = "Имена";
+
+        DefaultCellEditor Storage;
+
+        public  Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            setText((value == null) ? "" : value.toString());
+            setSize(table.getColumnModel().getColumn(column).getWidth(),
+                    getPreferredSize().height);
+            if (table.getRowHeight(row) != getPreferredSize().height) {
+                table.setRowHeight(row, getPreferredSize().height);
+            }
+            return this;
+        }
+        public void mainFrame () {
+        //    pane = new JScrollPane(generalLst);
+            generalLst = new JTextArea(8,40);
+            boxGlobal = new JPanel();
+            try {
+                File file = new File("Txt.txt");
+                FileReader read = new FileReader(file);
+                BufferedReader reading = new BufferedReader(read);
+                while (dateForArea != null) {
+                    dateForArea = reading.readLine();
+                    generalLst.append(dateForArea + "\n");
+                    System.out.println(dateForArea + " ");
+                }
+            }
+            catch (IOException ex) {
+
+            }
+
+            openFormObjects = new JButton(new ImageIcon("src/add.png"));
+            openFormNames = new JButton(new ImageIcon("src/add.png"));
+            openFormGroups = new JButton(new ImageIcon("src/add.png"));
+
+            openFormObjects.setBorderPainted(false);
+            openFormObjects.setFocusPainted(false);
+            openFormObjects.setContentAreaFilled(false);
+
+            openFormNames.setBorderPainted(false);
+            openFormNames.setFocusPainted(false);
+            openFormNames.setContentAreaFilled(false);
+
+            openFormGroups.setBorderPainted(false);
+            openFormGroups.setFocusPainted(false);
+            openFormGroups.setContentAreaFilled(false);
+
+            openFormObjects.addActionListener(new OpenFormObject());
+            openFormNames.addActionListener(new OpenFormNames());
+            openFormGroups.addActionListener(new OpenFormGroups());
+
+
+           saveData = new JButton("Добавить");
+           saveData.addActionListener(new Save());
+           container = new JPanel(new FlowLayout(FlowLayout.LEFT));
+           container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+           mainFrame = new JFrame();
+
+           boxLeft = new JPanel();
+           boxLeft.setLayout(new BoxLayout(boxLeft, BoxLayout.Y_AXIS));
+
+           boxRight = new JPanel();
+           boxRight.setLayout(new BoxLayout(boxRight, BoxLayout.Y_AXIS));
+           boxGeneral = new JPanel();
+
+           textForGroups = new JTextField(30);
+           textForNames = new JTextField(30);
+           textForObjects = new JTextField(30);
+
+           countLinesLocalForName();
+           countLinesLocalForGroups();
+           countLinesLocalForObjects();
+
+           boxNames = new JComboBox<>(listForNames);
+           boxGroups = new JComboBox<>(listForGroups);
+           boxObjects = new JComboBox<>(listForObjects);
+
+           boxNames.addActionListener(this);
+           boxObjects.addActionListener(this);
+           boxGroups.addActionListener(this);
+
+           container.add(BorderLayout.WEST, boxGroups);
+           container.add(Box.createVerticalStrut(25));
+           container.add(BorderLayout.WEST, boxObjects);
+           container.add(Box.createVerticalStrut(25));
+           container.add(BorderLayout.WEST, boxNames);
+
+            boxRight.add(openFormGroups);
+            boxRight.add(Box.createVerticalStrut(25));
+            boxRight.add(openFormObjects);
+            boxRight.add(Box.createVerticalStrut(25));
+            boxRight.add(openFormNames);
+
+            //boxLeft.add(saveData);
+            boxLeft.add(container);
+
+            boxGeneral.add(boxRight);
+            boxGeneral.add(boxLeft);
+            boxGeneral.add(Box.createHorizontalStrut(50));
+
+            boxGlobal.add(boxGeneral);
+            boxGlobal.add(saveData, BoxLayout.X_AXIS);
+
+            boxGeneral.add(new JScrollPane(generalLst));
+            boxGeneral.add(BorderLayout.CENTER, saveData);
+
+
+           mainFrame.add(BorderLayout.WEST, boxGlobal);
+
+           mainFrame.setSize(900,500);
+           mainFrame.setVisible(true);
+
+        }
+
+
+        public void countLinesGeneralForTable() {
+            try {
+                LineNumberReader lnr = new LineNumberReader(new FileReader("Txt.txt"));
+                while (null != lnr.readLine()) {
+                    linesCount++; }
+            } catch (IOException ex) {
+
+            }
+            System.out.println("Количество строк в файле: " + linesCount);
+        }
+        public void countLinesLocalForName() {
+            try {
+                LineNumberReader lnr = new LineNumberReader(new FileReader("Names.txt"));
+                while (null != lnr.readLine()) {
+                    lineCountForNames++; }
+            } catch (IOException ex) {
+
+            }
+            System.out.println("Количество строк в файле: " + lineCountForNames);
+            listForNames = new String[lineCountForNames];
+            try {
+                File save = new File("Names.txt");
+                FileReader fr = new FileReader(save);
+                BufferedReader reader = new BufferedReader(fr);
+                while ((line = reader.readLine()) != null) {
+                    System.out.print(line + "\n");
+                    lineCountForNames--;
+                    listForNames[lineCountForNames] = line;
+                }
+                reader.close();
+            } catch (IOException ex) {
+
+            }
+        }
+        public void countLinesLocalForGroups() {
+            try {
+                LineNumberReader lnr = new LineNumberReader(new FileReader("Groups.txt"));
+                while (null != lnr.readLine()) {
+                    linesCountsForGroups++; }
+            } catch (IOException ex) {
+
+            }
+            System.out.println("Количество строк в файле: " + linesCountsForGroups);
+            listForGroups = new String[linesCountsForGroups];
+            try {
+                File save = new File("Groups.txt");
+                FileReader fr = new FileReader(save);
+                BufferedReader reader = new BufferedReader(fr);
+                while ((line = reader.readLine()) != null) {
+                    System.out.print(line + "\n");
+                    linesCountsForGroups--;
+                    listForGroups[linesCountsForGroups] = line;
+                }
+                reader.close();
+            } catch (IOException ex) {
+
+            }
+        }
+        public void countLinesLocalForObjects() {
+            try {
+                LineNumberReader lnr = new LineNumberReader(new FileReader("Objects.txt"));
+                while (null != lnr.readLine()) {
+                    linesCountsForObjects++;
+                }
+            } catch (IOException ex) {
+
+            }
+            System.out.println("Количество строк в файле: " + linesCountsForObjects);
+
+            listForObjects = new String[linesCountsForObjects];
+            try {
+                File save = new File("Objects.txt");
+                FileReader fr = new FileReader(save);
+                BufferedReader reader = new BufferedReader(fr);
+                while ((line = reader.readLine()) != null) {
+                    System.out.print(line + "\n");
+                    linesCountsForObjects--;
+                    listForObjects[linesCountsForObjects] = line;
+                }
+                reader.close();
+            } catch (IOException ex) {
+
+            }
+        }
+        public void createTable() {
+
+
+            isText = new JTextField(30);
+
+            model = new DefaultTableModel();
+            showDate();
+            isTable = new JTable(model);
+
+            //TableDate renderer = new TableDate();
+            isTable = new JTable(model);
+            countLinesGeneralForTable();
+            isTable.setAutoCreateRowSorter(true);
+           // isTable.getColumnModel().getColumn(0).setCellRenderer(renderer); //DON`T TOUCH IT, PLS, ELSE WILL BE BAD ;D
+
+            refreshTable();
+            isTable.setVisible(true);
+            // isTable.getTableHeader().setFont(new Font("Arial", Font.PLAIN, 10));
+          //  isTable.setFont(new Font("", Font.PLAIN, 15));
+           // callBoxObjects();
+            callBoxDataForTable();
+           // callBoxGroups();
+
+            isFrame = new JFrame("main");
+            isPanel = new JPanel();
+
+            createSchedule = new JButton("Создать расписание");
+
+            createSchedule.addActionListener(new Save());
+
+            isPanel.add(isTable);
+
+            isPanel.add(createSchedule, BoxLayout.Y_AXIS);
+            //saveTable.addActionListener(this);
+
+            pane = new JScrollPane(isTable, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+                    ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+            isTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+            isFrame.add(BorderLayout.CENTER, pane);
+            isFrame.add(BorderLayout.SOUTH, isPanel);
+
+            isFrame.setSize(1000, 1000);
+            isFrame.setVisible(true);
+
+            String[] timeLessons = new String[] {"09:00 - 10:30",
+                                                 "10:45 - 12:15",
+                                                 "12:45 - 14:15"};
+
+
+            int counter = 0;
+            int column = isTable.getColumnCount();
+            int countLinesForStop = linesCount;
+            int ColumnsGoTo = 0;
+            int CountRowFromFile= 0;
+            int linesGoTo = 0;
+            int countColumn = column;
+            int countLessons = 0;
+            try {
+                File e = new File("Txt.txt");
+                FileReader f = new FileReader(e);
+                BufferedReader reader = new BufferedReader(f);
+               while (!dateFromFile.equals(" ")) { // or var.equals("");
+                   //timeLessons++;
+                    linesCount--;
+                    try (Stream<String> lines = Files.lines(Paths.get("Txt.txt"))) {
+                        dateFromFile = lines.skip(linesGoTo).findFirst().get(); // back method through '-'
+                        linesGoTo++;
+                        counter++;
+                        ColumnsGoTo++;
+                    }
+                    if (ColumnsGoTo == countColumn) {
+                        CountRowFromFile++;
+                        ColumnsGoTo = 1;
+                        counter = 1;
+                    }
+                   if(countLessons == 3) {
+                        countLessons = 0;
+                    //    model.addRow(new Object[] {" ", " ", " ", " ", " ", " "});
+                    }
+                   model.addRow(new Object[] {timeLessons[countLessons], dateFromFile, "", "", "", ""});
+                   countLessons++;
+                   isTable.setValueAt(dateFromFile, (counter - counter) + CountRowFromFile, counter);
+
+                 //  System.out.println(ColumnsGoTo + " " + column + " " + linesCount + " " + CountRowFromFile);
+
+                }
+                reader.close();
+            } catch (Exception fileNotFound) {
+               // JOptionPane.showMessageDialog(null, "No provide");
+            }
+            int valueOfDeleteRow = CountRowFromFile + 1;
+            while(valueOfDeleteRow <= (countLinesForStop - 1))  {
+                valueOfDeleteRow++;
+                model.removeRow(CountRowFromFile + 1);
+            }
+            isTable.getColumnModel().getColumn(0).setPreferredWidth(90);
+
+            isTable.repaint();
+            isTable.setRowHeight(40);
+        }
+
+
+        public void refreshTable() {
+            JTableHeader th = isTable.getTableHeader();
+
+            isTable.setRowHeight(12);
+
+            for (int i = 0; i < isTable.getColumnCount(); i++) {
+                TableColumn column = isTable.getColumnModel().getColumn(i);
+                int prefWidth = Math.round((float) th.getFontMetrics(th.getFont())
+                        .getStringBounds(th.getTable().getColumnName(i),
+                                th.getGraphics()).getWidth());
+                column.setPreferredWidth(prefWidth + 260);
+            }
+        }
+
+        public void callBoxDataForTable() {
+            JComboBox<String> Names = new JComboBox<>(new String[] {});
+            Storage = new DefaultCellEditor(Names);
+            for (int x = 1; x <= 6; x++)
+            isTable.getColumnModel().getColumn(x).setCellEditor(Storage);
+            try {
+                File file = new File("Txt.txt");
+                FileReader na = new FileReader(file);
+                BufferedReader reader = new BufferedReader(na);
+                na.getEncoding();
+                while (DataForTable != null) {
+                    Names.addItem(DataForTable);
+                    DataForTable = reader.readLine();
+                }
+                reader.close();
+            } catch (Exception fileNotFound) {
+                JOptionPane.showMessageDialog(null, messageError + " " + nameErrorNames);
+            }
+        }
+
+        public void showDate () {
+            model.addColumn("Пары");
+            model.addColumn("Понедельник");
+            model.addColumn("Вторник");
+            model.addColumn("Среда");
+            model.addColumn("Четверг");
+            model.addColumn("Пятница");
+            model.addColumn("Суббота");
+        }
+
+        public void actionPerformed(ActionEvent event) {
+            event.getSource();
+            String textGroups = (String)boxGroups.getSelectedItem();
+            String textObjects = (String)boxObjects.getSelectedItem();
+            String textNames = (String)boxNames.getSelectedItem();
+            stringWrite = textGroups + " " + textObjects + " " + textNames;
+            System.out.println(stringWrite + " ");
+
+        }
+
+    }
+
+
+/*    static public class Renderer extends DefaultTableCellRenderer {
+        public Component getTableCellRendererComponent(JTable table,
+                                                       Object value,
+                                                       boolean isSelected,
+                                                       boolean hasFocus,
+                                                       int row,
+                                                       int column) {
+            Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            String callValue = table.getValueAt(row, table.getColumnModel().getColumnIndex("0")).toString();
+            if(callValue.equals("Man")){
+                cell.setBackground(Color.RED);
+            }
+            return cell;
+        }}*/ // helping for color
+    //TableDate renderer = new TableDate();
+
+    // isTable.getColumnModel().getColumn(0).setCellRenderer(renderer);*/
+    // isTable.setShowHorizontalLines(false);
+    // isTable.setShowVerticalLines(false);
+
+
+
+    static class Save extends Main.TableDate implements ActionListener {
+        public void actionPerformed(ActionEvent event) {
+            generalLst = new JTextArea();
+            System.out.print("--------> " + stringWrite + "\n");
+            try {
+                FileWriter write = new FileWriter("Txt.txt", true);
+                write.write(stringWrite + "\n");
+                write.close();
+            }
+            catch (IOException e) {
+
+            }
+            generalLst.getPropertyChangeListeners();
+        }
+
+    }
+    static class OpenFormObject implements ActionListener { // add objects in list
+        JFrame newFrameForObjects;
+        JButton addObjects;
+        JPanel addPanelObjects;
+
+        static JTextField textForObjects;
+        static String save;
+        static JLabel label;
+        public void actionPerformed(ActionEvent event) {
+
+            label = new JLabel("Запишити дисциплину для сохранения");
+
+            addObjects = new JButton("Сохранить");
+
+            textForObjects = new JTextField(30);
+
+            label.setFont(new Font("Tahoma", Font.PLAIN, 13));
+            addPanelObjects = new JPanel();
+            addPanelObjects.add(textForObjects, BoxLayout.X_AXIS);
+            addPanelObjects.add(label);
+            addPanelObjects.add(addObjects, BoxLayout.Y_AXIS);
+
+            newFrameForObjects = new JFrame("Добавить дисциплину в список");
+            newFrameForObjects.add(BorderLayout.CENTER, addPanelObjects);
+            newFrameForObjects.setSize(450, 100);
+            newFrameForObjects.setVisible(true);
+
+            addObjects.addActionListener(new SaveObjects());
+
+
+
+        }
+    }
+    static class OpenFormNames implements ActionListener {
+        JFrame newFrameForNames;
+        JButton addNames;
+        JPanel addPanelNames;
+
+        static JTextField textForNames;
+        static String save;
+        static JLabel label;
+
+        public void actionPerformed(ActionEvent event) {
+            label = new JLabel("Запишити имя для сохранения");
+
+            addNames = new JButton("Сохранить");
+
+            textForNames = new JTextField(30);
+
+            label.setFont(new Font("Tahoma", Font.PLAIN, 13));
+            addPanelNames = new JPanel();
+            addPanelNames.add(textForNames, BoxLayout.X_AXIS);
+            addPanelNames.add(label);
+            addPanelNames.add(addNames, BoxLayout.Y_AXIS);
+
+            newFrameForNames = new JFrame("Добавить имя в список");
+            newFrameForNames.add(BorderLayout.CENTER, addPanelNames);
+            newFrameForNames.setSize(450, 100);
+            newFrameForNames.setVisible(true);
+
+            addNames.addActionListener(new SaveNames());
+
+        }
+
+    }
+    static class OpenFormGroups implements ActionListener{
+        JFrame newFrameForGroups;
+        JButton addGroups;
+        JPanel addPanelGroups;
+
+        static JTextField textForGroups;
+        static String save;
+        static JLabel label;
+
+        public void actionPerformed(ActionEvent event) {
+            label = new JLabel("Запишити группу для сохранения");
+
+            addGroups = new JButton("Сохранить");
+
+            textForGroups = new JTextField(30);
+
+            label.setFont(new Font("Tahoma", Font.PLAIN, 13));
+            addPanelGroups = new JPanel();
+            addPanelGroups.add(textForGroups, BoxLayout.X_AXIS);
+            addPanelGroups.add(label);
+            addPanelGroups.add(addGroups, BoxLayout.Y_AXIS);
+
+            newFrameForGroups = new JFrame("Добавить группу в список");
+            newFrameForGroups.add(BorderLayout.CENTER, addPanelGroups);
+            newFrameForGroups.setSize(450, 100);
+            newFrameForGroups.setVisible(true);
+
+            addGroups.addActionListener(new SaveGroups());
+        }
+    }
+
+}
+
+class SaveGroups extends Main.OpenFormGroups implements ActionListener {
+    public void actionPerformed(ActionEvent event) {
+        save = textForGroups.getText();
+        if(save.isEmpty()) {
+            return;
+        }
+        else
+            label.setText("Группа '" + textForGroups.getText() + "' сохранено");
+        try {
+            FileWriter isBegin = new FileWriter("Groups.txt", true);
+            isBegin.write(save + "\n");
+            isBegin.close();
+        }
+        catch (Exception fileNotFound) {
+        }
+        finally {
+            textForGroups.setText("");
+        }
+    }
+
+}
+class SaveNames extends Main.OpenFormNames implements ActionListener {
+    public void actionPerformed(ActionEvent event) {
+        save = textForNames.getText();
+        if(save.isEmpty()) {
+            return;
+        }
+        else
+            label.setText("Имя '" + textForNames.getText() + "' сохранено");
+        try {
+            FileWriter isBegin = new FileWriter("Names.txt", true);
+            isBegin.write(save + "\n");
+            isBegin.close();
+        }
+        catch (Exception fileNotFound) {
+
+        }
+        finally {
+            textForNames.setText("");
+        }
+    }
+}
+class SaveObjects extends Main.OpenFormObject implements ActionListener { /// save date for objects
+    public void actionPerformed(ActionEvent event) {
+        save = textForObjects.getText();
+        if(save.isEmpty()) {
+            return;
+        }
+        else
+            label.setText("Дисциплина '" + textForObjects.getText() + "' сохранена");
+        try {
+            FileWriter isBegin = new FileWriter("Objects.txt", true);
+            isBegin.write(save + "\n");
+            isBegin.close();
+        }
+        catch (Exception fileNotFound) {
+        }
+        finally {
+                 textForObjects.setText("");
+        }
+    }
+}
+abstract class Select extends Main.TableDate implements ItemListener {
+
+}
+
+
+
+
