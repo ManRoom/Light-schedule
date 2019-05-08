@@ -8,10 +8,9 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.MessageFormat;
 import java.util.StringTokenizer;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-
 
 public class Main {
     public static void main(String[] args) {
@@ -44,6 +43,7 @@ public class Main {
         final static String FILE_OF_NAMES = "NamesList.ini";
         final static String FILE_OF_GROUPS = "GroupsList.ini";
         final static String FILE_OF_SUBJECTS = "SubjectsList.ini";
+        final static String FILE_OF_REPOSITORY = "Repository.ini";
 
         static JTable TableSchedule;
         static JPanel lowPanel;
@@ -52,7 +52,7 @@ public class Main {
         static JFrame mainFrame;
         static JFrame authorization;
         static JTextArea generalLst;
-
+        static JTextArea notes;
         static JButton openFormSubjects;
         static JButton openFormNames;
         static JButton openFormGroups;
@@ -65,6 +65,9 @@ public class Main {
         static JButton signIn;
         static JButton signUpAccount;
         static JButton signUp;
+        static JButton saveDataNotes;
+        static JButton printSavedTable;
+        static JButton viewPrintedVersion;
 
         static JLabel infoAboutOperation;
         static JLabel infoEnter;
@@ -73,6 +76,7 @@ public class Main {
         static JLabel imageBack;
         static JLabel icon;
         static JLabel infoSI_SU;
+        static JLabel infoAboutEvent;
 
         JScrollPane pane;
         JTextField isText;
@@ -84,6 +88,8 @@ public class Main {
         static String DataForTable = "";
         static String stringWrite = "";
         static String stringWriteSort = "";
+        static String dataNotes = "";
+
         String dateFromFile = "";
         String[] listForNames;
         String[] listForGroups;
@@ -108,6 +114,13 @@ public class Main {
         final String NAME_ERROR_NAMES = "Имена";
         final String INFO_ABOUT_WORK = "Предварительно необходимо " +
                                        "выбрать параметр для сортировки";
+
+        final String ATTENTION_NOT_SELECTED_TABLE = "Предварительно необходимо " +
+                                              "открыть таличную часть для " +
+                                              "дальнейшей печати!";
+
+        final String NAME_ERROR_NOT_FOUND_PDF = "Файл для открытия отсутствует!";
+
         static String checkSignIn = "";
         static String condition;
 
@@ -119,8 +132,8 @@ public class Main {
                                      "новую учетную запись! </html>";
         final String INFO_ABOUT_SI = "Войдите как администратор или продолжите";
 
-        final Color COLOR_BORDER_WRONG = new Color(249, 58, 0);
-        final Color COLOR_BORDER_SUCCESS = new Color(4, 255, 0);
+        final Color COLOR_BORDER_WRONG = new Color(214, 63, 17);
+        final Color COLOR_BORDER_SUCCESS = new Color(63, 132, 17);
 
         DefaultTableModel newModelForStorage;
         static DefaultTableModel model;
@@ -186,7 +199,7 @@ public class Main {
             imageBack = new JLabel(new ImageIcon("src/bg.jpg")); // or IMG.
 
             infoAboutOperation = new JLabel("<html>Создайте пароль для " +
-                                                 "дальнейшей аунтетификации</html> ");
+                                                 "дальнейшей аутентификации</html> ");
 
             infoEnter = new JLabel("Введите пароль");
             infoRepeat = new JLabel("Повторите пароль");
@@ -201,14 +214,14 @@ public class Main {
             infoRepeat.setForeground(new Color(255, 255, 255));
             infoEnter.setForeground(new Color(255, 255, 255));
             rule.setForeground(new Color(255, 255, 255));
-
+            JLabel showLock = new JLabel(new ImageIcon("src/lock.gif"));
             rules = new JTextField("Администратор");
             rules.setEnabled(false);
 
             passwordUser = new JPasswordField();
             repeatPU = new JPasswordField();
 
-            signUpAccount = new JButton("Sign up");
+            signUpAccount = new JButton("Зарегистрироваться");
             signUpAccount.addActionListener(new CheckingDate());
 
             blockAll();
@@ -254,7 +267,7 @@ public class Main {
             repeatPU.setBounds(620, 175, 225, 25);
             rule.setBounds(622, 205, 225, 25);
             rules.setBounds(620, 235, 225, 30);
-            signUpAccount.setBounds(740, 280, 105, 30);
+            signUpAccount.setBounds(696, 280, 150, 30);
 
 
             commonPanel.add(passwordUser);
@@ -280,52 +293,53 @@ public class Main {
             authorization.setVisible(true);
         }
 
-        public void helloFrame() {
-
-            ImageIcon img = new ImageIcon("src/qw.gif");
-            JFrame f = new JFrame("frame");
-            //f.setLocationRelativeTo(null);
-            try {
-                f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                f.setUndecorated(true);
-                f.add(new JLabel(img));
-                f.setSize(550, 550);
-                f.pack();
-                f.setLocationRelativeTo(null);
-                f.setVisible(true);
-                f.setVisible(true);
-                TimeUnit.SECONDS.sleep(2);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(null, "Файл не найден");
-            } finally {
-                f.setVisible(false);
-            }
-        }
 
         public void mainFrame() {
 
+            notes = new JTextArea(5,50);
+            try {
+                File save = new File("DataNotes.ini");
+                FileReader fr = new FileReader(save);
+                BufferedReader reader = new BufferedReader(fr);
+                while (dataNotes != null) {
+                    dataNotes = reader.readLine();
+                    notes.append(dataNotes);
+                }
+                reader.close();
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Данные количества не определенны");
+            }
+
+            infoAboutEvent = new JLabel();
             JLabel infoAboutAll = new JLabel("<html> Выберите параметр для сортировки </html>");
             JLabel infoAboutGroups = new JLabel("<html> по группам: </html> ");
             JLabel infoAboutNames = new JLabel("<html> по преподавателям: </html> ");
+            JLabel notesInfo = new JLabel("Заметка: ");
             generalLst = new JTextArea(8, 35);
+
 
             openFormSubjects = new JButton(new ImageIcon("src/add_subjects.png"));
             openFormNames = new JButton(new ImageIcon("src/add_names.png"));
             openFormGroups = new JButton(new ImageIcon("src/add_groups.png"));
             deleteDateFromFiles = new JButton(new ImageIcon("src/delete.png"));
-
+            printSavedTable = new JButton(new ImageIcon("src/print.png"));
+            viewPrintedVersion = new JButton(new ImageIcon("src/viewPrintedVersion.png"));
             viewSavedSchedule = new JButton("Просмотр расписания");
-            viewSavedSchedule.addActionListener(new ViewSaveSchedule());
 
             openFormSubjects.setContentAreaFilled(false);
             openFormNames.setContentAreaFilled(false);
             openFormGroups.setContentAreaFilled(false);
             deleteDateFromFiles.setContentAreaFilled(false);
+            printSavedTable.setContentAreaFilled(false);
+            viewPrintedVersion.setContentAreaFilled(false);
 
             openFormSubjects.addActionListener(new OpenFormObject());
             openFormNames.addActionListener(new OpenFormNames());
             openFormGroups.addActionListener(new OpenFormGroups());
             deleteDateFromFiles.addActionListener(new DeleteAllDates());
+            printSavedTable.addActionListener(new PrintTable());
+            viewPrintedVersion.addActionListener(new ViewSavedData());
+            viewSavedSchedule.addActionListener(new ViewSaveSchedule());
 
             createSchedule = new JButton("Создать расписание");
             createSchedule.addActionListener(new BuildSchedule());
@@ -336,6 +350,8 @@ public class Main {
             sortOnClick = new JButton("Сортировать");
             sortOnClick.addActionListener(new SortDate());
 
+            saveDataNotes = new JButton("Сохранить");
+            saveDataNotes.addActionListener(new SaveDataNotes());
             mainFrame = new JFrame();
             setLayout(null);
 
@@ -364,7 +380,9 @@ public class Main {
             openFormSubjects.setBounds(10, 20, 32,32);
             openFormNames.setBounds(10, 80, 32,32);
             openFormGroups.setBounds(10, 140, 32,32);
-            deleteDateFromFiles.setBounds(10, 200, 32,32);
+            printSavedTable.setBounds(10, 200, 32,32);
+            viewPrintedVersion.setBounds(10, 260, 32,32);
+            deleteDateFromFiles.setBounds(10, 320, 32,32);
 
             boxNames.setBounds(70, 40, 225, 30);
             boxSubjects.setBounds(70, 80, 225, 30);
@@ -372,32 +390,61 @@ public class Main {
             generalLst.setBounds(330, 40, 360, 140);
             addDateToFile.setBounds(190, 170, 100, 30);
             createSchedule.setBounds(330, 190, 170, 30);
-            sortOnClick.setBounds(720, 190, 120, 30);
+            sortOnClick.setBounds(750, 190, 120, 30);
+            notes.setBounds(750, 310, 350, 140);
+            saveDataNotes.setBounds(1010, 460, 110, 30);
 
-            infoAboutAll.setBounds(720, 35, 350, 25);
+
+            infoAboutAll.setBounds(750, 35, 350, 25);
             infoAboutAll.setFont(new Font("Tahoma", Font.BOLD, 14));
             infoAboutAll.setForeground(Color.WHITE);
 
-            infoAboutNames.setBounds(720, 60, 350, 25);
+            notesInfo.setBounds(750, 220, 225, 140);
+            notesInfo.setFont(new Font("Tahoma", Font.BOLD, 14));
+            notesInfo.setForeground(Color.WHITE);
+
+            infoAboutNames.setBounds(750, 60, 350, 25);
             infoAboutNames.setFont(new Font("Tahoma", Font.BOLD, 14));
             infoAboutNames.setForeground(Color.WHITE);
 
-            infoAboutGroups.setBounds(720, 120, 350, 25);
+            infoAboutGroups.setBounds(750, 120, 350, 25);
             infoAboutGroups.setFont(new Font("Tahoma", Font.BOLD, 14));
             infoAboutGroups.setForeground(Color.WHITE);
 
-            sortBoxNames.setBounds(720, 85, 225, 30);
-            sortBoxGroups.setBounds(720, 145, 225, 30);
+            infoAboutEvent.setBounds(10, 530, 300, 25);
+            infoAboutEvent.setFont(new Font("Tahoma", Font.BOLD, 12));
+            infoAboutEvent.setForeground(Color.WHITE);
+
+            sortBoxNames.setBounds(750, 85, 225, 30);
+            sortBoxGroups.setBounds(750, 145, 225, 30);
             viewSavedSchedule.setBounds(500, 190, 170, 30);
 
-            JScrollPane scroll = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+
+
+            JScrollPane scrollGeneralList = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                                                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-            scroll.getViewport().setBackground(Color.BLACK);
-            scroll.getViewport().add(generalLst);
-            scroll.setBounds(330, 40, 340, 140);
-            ImageIcon backgroundImage = new ImageIcon("src/Background_main.jpg");
+            scrollGeneralList.getViewport().setBackground(Color.WHITE);
+            scrollGeneralList.getViewport().add(generalLst);
+            scrollGeneralList.setBounds(330, 40, 340, 140);
 
+
+            JScrollPane scrollNotes = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+            notes.setLineWrap(true);
+
+            scrollNotes.getViewport().setBackground(Color.WHITE);
+            scrollNotes.getViewport().add(notes);
+            scrollNotes.setBounds(750, 310, 370, 140);
+
+            ImageIcon backgroundImage = new ImageIcon("src/Background.jpg");
+
+            mainFrame.add(viewPrintedVersion);
+            mainFrame.add(printSavedTable);
+            mainFrame.add(infoAboutEvent);
+            mainFrame.add(notesInfo);
+            mainFrame.add(saveDataNotes);
+            mainFrame.add(scrollNotes);
             mainFrame.add(openFormSubjects);
             mainFrame.add(openFormNames);
             mainFrame.add(openFormGroups);
@@ -405,7 +452,7 @@ public class Main {
             mainFrame.add(infoAboutGroups);
             mainFrame.add(infoAboutNames);
             mainFrame.add(deleteDateFromFiles);
-            mainFrame.add(scroll);
+            mainFrame.add(scrollGeneralList);
             mainFrame.add(boxNames);
             mainFrame.add(boxSubjects);
             mainFrame.add(boxGroups);
@@ -425,7 +472,6 @@ public class Main {
         }
 
         public void viewSchedule() {
-            String nameFile = "Repository.txt";
 
             isText = new JTextField(30);
 
@@ -436,7 +482,7 @@ public class Main {
             refreshTable();
 
             TableSchedule.setVisible(true);
-            frameOfTable = new JFrame("Табличное представление расписания");
+            frameOfTable = new JFrame("Табличное представление данных");
             lowPanel = new JPanel();
 
             if (condition.equals("LimitedMode")) {
@@ -459,7 +505,7 @@ public class Main {
             frameOfTable.setVisible(true);
 
             callBoxDataOfTable();
-            OutputDateForNew(nameFile);
+            OutputDateForNew(FILE_OF_REPOSITORY);
             TableSchedule.getColumnModel().getColumn(0).setPreferredWidth(90);
             TableSchedule.setRowHeight(20);
         }
@@ -479,7 +525,7 @@ public class Main {
         public void countLinesGeneralForTableOut() {
             linesCountForNew = 0;
             try {
-                LineNumberReader lnr = new LineNumberReader(new FileReader("Repository.txt"));
+                LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_REPOSITORY));
                 while (null != lnr.readLine()) {
                     linesCountForNew++;
                 }
@@ -566,7 +612,7 @@ public class Main {
 
 
         public void OutputDate(String nameFile) {
-            countLinesGeneralForTableOut();
+            countLinesGeneralForTable();
             String[] timeLessons = new String[]{"09:00 - 10:30",
                                                 "10:45 - 12:15",
                                                 "12:45 - 14:15"};
@@ -578,7 +624,6 @@ public class Main {
             int CountRowFromFile = 0;
             int linesGoTo = 0;
             int column = TableSchedule.getColumnCount();
-            int row = TableSchedule.getRowCount();
             int countColumn = column;
             int countLessons = 0;
             try {
@@ -626,7 +671,6 @@ public class Main {
                                                 "09:00 - 10:30",
                                                 "10:45 - 12:15",
                                                 "12:45 - 14:15"};
-            nameFile = "Repository.txt";
 
             int counter = 0;
             int countLinesForStop = linesCountForNew;
@@ -634,7 +678,6 @@ public class Main {
             int CountRowFromFile = 0;
             int linesGoTo = 0;
             int column = TableSchedule.getColumnCount();
-            int row = TableSchedule.getRowCount();
             int countColumn = column;
             int countLessons = 0;
 
@@ -675,28 +718,29 @@ public class Main {
 
                             if (!stringWriteSort.isEmpty()) {
 
-                            Object valueOf = TableSchedule.getValueAt((counter - counter) + CountRowFromFile, counter);
-                            String toStringOfValue = valueOf.toString();
+                                 Object valueOf = TableSchedule.getValueAt((counter - counter) + CountRowFromFile, counter);
+                                 String toStringOfValue = valueOf.toString();
 
-                            StringTokenizer skipObjectValue = new StringTokenizer(toStringOfValue);
-                            String firstArgOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
-                            String secondArgOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
-                            String emptyValueOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : ""; // never use, need for work of "thirdValue"
-                            String thirdValueOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
-
-
-                            StringTokenizer skipStringBoxes = new StringTokenizer(stringWriteSort);
-                            String firstArg = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
-                            String secondArg = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
-                            String emptyValue = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : ""; // never use, need for work of "thirdValue"
-                            String thirdValue = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
+                                StringTokenizer skipObjectValue = new StringTokenizer(toStringOfValue);
+                                String firstArgOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
+                                String secondArgOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
+                                String emptyValueOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : ""; // never use, need for work of "thirdValue"
+                                String thirdValueOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
 
 
-                                if (firstArgOfObject.equals(firstArg) || thirdValueOfObject.equals(thirdValue)) {
-                                    TableSchedule.setValueAt(toStringOfValue, (counter - counter) + CountRowFromFile, counter);
-                                    TableSchedule.getColumnModel().getColumn(counter).setCellRenderer(new Renderer());
+                                StringTokenizer skipStringBoxes = new StringTokenizer(stringWriteSort);
+                                String firstArg = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
+                                String secondArg = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
+                                String emptyValue = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : ""; // never use, need for work of "thirdValue"
+                                String thirdValue = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
 
-                                 }
+
+                                    if (firstArgOfObject.equals(firstArg) || thirdValueOfObject.equals(thirdValue)) {
+                                        TableSchedule.setValueAt(toStringOfValue, (counter - counter) + CountRowFromFile, counter);
+                                        TableSchedule.getColumnModel().getColumn(counter).setCellRenderer(new Renderer());
+
+                                     }
+
                                 else {
                                     TableSchedule.setValueAt("", (counter - counter) + CountRowFromFile, counter);
                              }
@@ -748,6 +792,7 @@ public class Main {
             } catch (Exception fileNotFound) {
                 JOptionPane.showMessageDialog(null, MASSAGE_ERROR_NOT_FOUND_FILE);
             }
+            DataForTable = "";
         }
 
         public void showDate () {
@@ -766,7 +811,7 @@ public class Main {
 
         public void clearFileForSave() {
             try {
-                FileWriter write = new FileWriter("Repository.txt");
+                FileWriter write = new FileWriter(FILE_OF_REPOSITORY);
                 write.write("");
                 write.close();
             }
@@ -803,7 +848,40 @@ public class Main {
             System.out.println(stringWriteSort + " ");
         }
     }
+    static public class PrintTable extends TableDate implements ActionListener {
+        public void actionPerformed(ActionEvent event) {
+       /*     if (Desktop.isDesktopSupported()) {
+                try {
+                    File myFile = new File("src/TI.pdf");
+                    Desktop.getDesktop().open(myFile);
+                } catch (IOException ex) {
+                    // no application registered for PDFs
+                }
+            }*/
+            MessageFormat header = new MessageFormat("Печатная форма");
+            MessageFormat footer = new MessageFormat("");
+            try {
+                TableSchedule.print(JTable.PrintMode.FIT_WIDTH, header, footer);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, ATTENTION_NOT_SELECTED_TABLE);
+            }
 
+        }
+    }
+
+    static public class ViewSavedData extends TableDate implements ActionListener {
+        public void actionPerformed(ActionEvent event) {
+           if (Desktop.isDesktopSupported()) {
+                try {
+                    File myFile = new File("src/TI.pdf");
+                    Desktop.getDesktop().open(myFile);
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(null,  NAME_ERROR_NOT_FOUND_PDF);
+                }
+            }
+
+        }
+    }
     static public class Renderer extends DefaultTableCellRenderer {
         public Component getTableCellRendererComponent(JTable table,
                                                        Object value,
@@ -820,7 +898,9 @@ public class Main {
     static class AddDate extends Main.TableDate implements ActionListener {
         public void actionPerformed(ActionEvent event) {
             generalLst.append(stringWrite + "\n");
-            System.out.print("reading line is --> [" + stringWrite + "]\n");
+            generalLst.append("-------------------------------------------------------------------------------" + "\n");
+
+            System.out.print("adding line is --> [" + stringWrite + "]\n");
             try {
                 FileWriter write = new FileWriter(FILE_OF_TABLE_BS, true);
                 write.write(stringWrite + "\n");
@@ -882,7 +962,7 @@ public class Main {
 
             if(passOriginal.equals(passRepeat)) {
                 if(passOriginal.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "Fields must be filled");
+                    JOptionPane.showMessageDialog(null, "Поля должны быть заполненны!");
                     return;
                 }
 
@@ -968,8 +1048,8 @@ public class Main {
                                                                        " " + NAME_ERROR_SUBJECTS);
             }
         }
-
     }
+
     static class OpenFormNames extends TableDate implements ActionListener {
         JFrame frameForNames;
         JButton addDate;
@@ -1072,7 +1152,7 @@ public class Main {
             }
             catch (Exception fileNotFound) {
                 JOptionPane.showMessageDialog(null, MASSAGE_ERROR_NOT_FOUND_FILE +
-                                                                       " " + NAME_ERROR_SUBJECTS);
+                                                                       " " + NAME_ERROR_GROUPS);
             }
         }
     }
@@ -1090,8 +1170,7 @@ public class Main {
             refreshTable();
             TableSchedule.setVisible(true);
 
-
-            frameOfTable = new JFrame("done schedule");
+            frameOfTable = new JFrame("Созданное расписание");
             lowPanel = new JPanel();
 
             beginBuild = new JButton("Сохранить");
@@ -1124,6 +1203,25 @@ public class Main {
         }
     }
 
+    static class SaveDataNotes extends TableDate implements ActionListener {
+        public void actionPerformed(ActionEvent event) {
+
+            dataNotes = notes.getText();
+
+            try {
+                FileWriter write = new FileWriter("DataNotes.ini", false);
+                write.write(dataNotes);
+                write.close();
+                infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null, "Данные не могут быть записаны");
+                infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
+            }
+
+
+        }
+
+    }
     static class SaveForReturn extends TableDate implements ActionListener {
         public void actionPerformed(ActionEvent event) {
             String checkForAvailability = "";
@@ -1163,14 +1261,16 @@ public class Main {
                 write.close();
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(null, "Данные не могут быть записаны");
+                infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
             }
             if(checkForAvailability == null) {
                 saveData();
                 JOptionPane.showMessageDialog(null, "Сохранение завершено!");
+                infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
             }
         }
 
-        private void saveData() {
+        public void saveData() {
             clearFileForSave();
 
             int column = TableSchedule.getColumnCount();
@@ -1179,13 +1279,15 @@ public class Main {
             for (int x = 0; x < row; x++) {
                 for (int y = 1; y < column; y++) {
                     saveTable = TableSchedule.getValueAt(x, y);
-                    System.out.print("[ " + saveTable + "]\n");
+                    System.out.print("[ " + saveTable + "] ");
                     try {
-                        FileWriter write = new FileWriter("Repository.txt", true);
+                        FileWriter write = new FileWriter(FILE_OF_REPOSITORY, true);
                         write.write(saveTable + "\n");
                         write.close();
+                        infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
                     } catch (IOException e) {
                         JOptionPane.showMessageDialog(null, "Файл не найден");
+                        infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
                     }
                 }
             }
@@ -1208,17 +1310,18 @@ public class Main {
 class SaveGroups extends Main.OpenFormGroups implements ActionListener {
     public void actionPerformed(ActionEvent event) {
         save = textForGroups.getText();
-        labelInfo.setForeground(new Color(63, 132, 17));
+        labelInfo.setForeground(COLOR_BORDER_SUCCESS);
         if(save.isEmpty()) {
             labelInfo.setText("Поле не должно быть пустым!");
-            labelInfo.setForeground(new Color(158, 34, 6));
+            labelInfo.setForeground(COLOR_BORDER_WRONG);
+            infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
             return;
         }
         else
             labelInfo.setText("Группа '" + textForGroups.getText() + "' сохранено");
             placeForConfirmation.setVisible(true);
             writeDate(save);
-
+            infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
             textForGroups.setText("");
 
     }
@@ -1228,18 +1331,19 @@ class SaveNames extends Main.OpenFormNames implements ActionListener {
     public void actionPerformed(ActionEvent event) {
         save = textForNames.getText();
 
-        labelInfo.setForeground(new Color(63, 132, 17));
+        labelInfo.setForeground(COLOR_BORDER_SUCCESS);
 
         if(save.isEmpty()) {
             labelInfo.setText("Поле не должно быть пустым!");
-            labelInfo.setForeground(new Color(158, 34, 6));
+            labelInfo.setForeground(COLOR_BORDER_WRONG);
+            infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
             return;
         }
         else
             labelInfo.setText("Имя '" + textForNames.getText() + "' сохранено");
             placeForConfirmation.setVisible(true);
             writeDate(save);
-
+            infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
             textForNames.setText("");
 
     }
@@ -1247,17 +1351,18 @@ class SaveNames extends Main.OpenFormNames implements ActionListener {
 class SaveSubjects extends Main.OpenFormObject implements ActionListener { /// save date for objects
     public void actionPerformed(ActionEvent event) {
         save = textForSubjects.getText();
-        labelInfoFrame.setForeground(new Color(63, 132, 17));
+        labelInfoFrame.setForeground(COLOR_BORDER_SUCCESS);
         if(save.isEmpty()) {
             labelInfoFrame.setText("Поле не должно быть пустым!");
-            labelInfoFrame.setForeground(new Color(158, 34, 6));
+            labelInfoFrame.setForeground(COLOR_BORDER_WRONG);
+            infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
             return;
         }
         else
             labelInfoFrame.setText("Дисциплина '" + textForSubjects.getText() + "' сохранена");
             placeForConfirmation.setVisible(true);
             writeDate(save);
-
+            infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
             textForSubjects.setText("");
     }
 }
@@ -1265,18 +1370,18 @@ class SaveSubjects extends Main.OpenFormObject implements ActionListener { /// s
 class DeleteAllDates extends Main.TableDate implements ActionListener {
     public void actionPerformed(ActionEvent event) {
 
-        String[] listFiles = {"Repository.txt",
-                "DoneSchedule.txt",
-                "Names.txt",
-                "Groups.txt",
-                "Objects.txt",
-                "Check.txt"};
+        String[] listFiles = {"Repository.ini",
+                              "DoneSchedule.ini",
+                              "NamesList.ini",
+                              "GroupsList.ini",
+                              "SubjectsList.ini",
+                              "Check.ini"};
 
         Object[] options = {"Да",
                             "Нет"};
                  int userChoice = JOptionPane.showOptionDialog(frameOfTable,
                 "Вы действительно хотите удалить все данные?",
-                "Удаление данных",
+                   "Удаление данных",
                 JOptionPane.YES_NO_CANCEL_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
                 null,
@@ -1296,6 +1401,7 @@ class DeleteAllDates extends Main.TableDate implements ActionListener {
                          JOptionPane.showMessageDialog(null, "Удаление не завершено по неизвестной причине");
                      }
                      JOptionPane.showMessageDialog(null, "Удаление завершено!");
+                     infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
                     }
                         else
                             JOptionPane.showMessageDialog(null, "Удаление отменено!");
