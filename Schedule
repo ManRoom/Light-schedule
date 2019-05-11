@@ -46,6 +46,7 @@ public class Main {
         final static String FILE_OF_REPOSITORY = "Repository.ini";
 
         static JTable TableSchedule;
+        static JTable tableHours;
         static JPanel lowPanel;
         static JPanel commonPanel;
         JFrame frameOfTable;
@@ -68,6 +69,8 @@ public class Main {
         static JButton saveDataNotes;
         static JButton printSavedTable;
         static JButton viewPrintedVersion;
+        static JButton openCellOfTable;
+        static JButton saveTableOfHours;
 
         static JLabel infoAboutOperation;
         static JLabel infoEnter;
@@ -137,9 +140,10 @@ public class Main {
 
         DefaultTableModel newModelForStorage;
         static DefaultTableModel model;
+        static DefaultTableModel th_call;
         DefaultCellEditor Storage;
         Object saveTable = "";
-
+        static String storageGroups = "";
         public void showPanelCreateAccount() {
             imageBack.setIcon(new ImageIcon("src/bg_dark.jpg"));
 
@@ -214,7 +218,7 @@ public class Main {
             infoRepeat.setForeground(new Color(255, 255, 255));
             infoEnter.setForeground(new Color(255, 255, 255));
             rule.setForeground(new Color(255, 255, 255));
-            JLabel showLock = new JLabel(new ImageIcon("src/lock.gif"));
+            ///////////////////JLabel showLock = new JLabel(new ImageIcon("src/lock.gif"));
             rules = new JTextField("Администратор");
             rules.setEnabled(false);
 
@@ -324,6 +328,8 @@ public class Main {
             deleteDateFromFiles = new JButton(new ImageIcon("src/delete.png"));
             printSavedTable = new JButton(new ImageIcon("src/print.png"));
             viewPrintedVersion = new JButton(new ImageIcon("src/viewPrintedVersion.png"));
+            openCellOfTable = new JButton(new ImageIcon("src/cellTable.png"));
+
             viewSavedSchedule = new JButton("Просмотр расписания");
 
             openFormSubjects.setContentAreaFilled(false);
@@ -332,6 +338,7 @@ public class Main {
             deleteDateFromFiles.setContentAreaFilled(false);
             printSavedTable.setContentAreaFilled(false);
             viewPrintedVersion.setContentAreaFilled(false);
+            openCellOfTable.setContentAreaFilled(false);
 
             openFormSubjects.addActionListener(new OpenFormObject());
             openFormNames.addActionListener(new OpenFormNames());
@@ -340,6 +347,7 @@ public class Main {
             printSavedTable.addActionListener(new PrintTable());
             viewPrintedVersion.addActionListener(new ViewSavedData());
             viewSavedSchedule.addActionListener(new ViewSaveSchedule());
+            openCellOfTable.addActionListener(new CellOfTable());
 
             createSchedule = new JButton("Создать расписание");
             createSchedule.addActionListener(new BuildSchedule());
@@ -383,6 +391,7 @@ public class Main {
             printSavedTable.setBounds(10, 200, 32,32);
             viewPrintedVersion.setBounds(10, 260, 32,32);
             deleteDateFromFiles.setBounds(10, 320, 32,32);
+            openCellOfTable.setBounds(10, 380, 32,32);
 
             boxNames.setBounds(70, 40, 225, 30);
             boxSubjects.setBounds(70, 80, 225, 30);
@@ -439,6 +448,7 @@ public class Main {
 
             ImageIcon backgroundImage = new ImageIcon("src/Background.jpg");
 
+            mainFrame.add(openCellOfTable);
             mainFrame.add(viewPrintedVersion);
             mainFrame.add(printSavedTable);
             mainFrame.add(infoAboutEvent);
@@ -560,15 +570,17 @@ public class Main {
         }
 
         public void countLinesLocalForGroups() {
+
             try {
                 LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_GROUPS));
                 while (null != lnr.readLine()) {
                     linesCountsForGroups++;
                 }
             } catch (IOException ex) {
-
+                JOptionPane.showMessageDialog(null, "Данные количества не определенны");
             }
             listForGroups = new String[linesCountsForGroups];
+
             try {
                 File save = new File(FILE_OF_GROUPS);
                 FileReader fr = new FileReader(save);
@@ -582,6 +594,7 @@ public class Main {
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null, "Данные количества не определенны");
             }
+
         }
 
         public void countLinesLocalForObjects() {
@@ -737,7 +750,6 @@ public class Main {
 
                                     if (firstArgOfObject.equals(firstArg) || thirdValueOfObject.equals(thirdValue)) {
                                         TableSchedule.setValueAt(toStringOfValue, (counter - counter) + CountRowFromFile, counter);
-                                        TableSchedule.getColumnModel().getColumn(counter).setCellRenderer(new Renderer());
 
                                      }
 
@@ -795,6 +807,20 @@ public class Main {
             DataForTable = "";
         }
 
+
+        public void ColumnsCellOfTable() { // experiment ha-ha-ha
+            countLinesLocalForGroups();
+            int lengthOfList = listForGroups.length;
+            for(String counter : listForGroups) {
+                if(lengthOfList >= listForGroups.length) {
+                    lengthOfList--;
+                    th_call.addColumn(NAME_ERROR_SUBJECTS);
+                    th_call.addColumn(counter);
+                }
+                else
+                    th_call.addColumn(counter);
+            }
+        }
         public void showDate () {
             String[] daysOfWeek = {"Пары",
                                    "Понедельник",
@@ -834,6 +860,18 @@ public class Main {
             }
         }
 
+        public void refreshTableOfHours(int valueOfWight) {
+            JTableHeader th = tableHours.getTableHeader();
+
+            for (int i = 0; i < tableHours.getColumnCount(); i++) {
+                TableColumn column = tableHours.getColumnModel().getColumn(i);
+                int prefWidth = Math.round((float) th.getFontMetrics(th.getFont())
+                        .getStringBounds(th.getTable().getColumnName(i),
+                                th.getGraphics()).getWidth());
+                column.setPreferredWidth(prefWidth + valueOfWight);
+            }
+        }
+
         public void actionPerformed(ActionEvent event) {
             String textGroups = (String)boxGroups.getSelectedItem();
             String textObjects = (String)boxSubjects.getSelectedItem();
@@ -846,6 +884,157 @@ public class Main {
 
             stringWriteSort = sortTextGroups + " " + " " + sortTextNames;
             System.out.println(stringWriteSort + " ");
+        }
+
+        public void countLinesForTable() {
+            linesCount = 0;
+            try {
+                LineNumberReader lnr = new LineNumberReader(new FileReader("TableOfHours.ini"));
+                while (null != lnr.readLine()) {
+                    linesCount++;
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Данные количества не определенны");
+            }
+        }
+
+        public void OutputDataOf_TOH(String nameFile) {
+           // countLinesGeneralForTableOut();
+            countLinesForTable();
+
+            int counter = 0;
+           // int countLinesForStop = linesCountForNew;
+            int ColumnsGoTo = 0;
+            int CountRowFromFile = 0;
+            int linesGoTo = 0;
+            int column = tableHours.getColumnCount();
+            int countColumn = column;
+
+
+            try {
+                File e = new File(nameFile);
+                FileReader f = new FileReader(e);
+                BufferedReader reader = new BufferedReader(f);
+                while (!dateFromFile.equals(" ")) {
+                    linesCountForNew--;
+
+                    try (Stream<String> lines = Files.lines(Paths.get(nameFile))) {
+                        dateFromFile = lines.skip(linesGoTo).findFirst().get();
+                        linesGoTo++;
+                        counter++;
+                        ColumnsGoTo++;
+                    }
+
+                    if (ColumnsGoTo == countColumn) {
+                        CountRowFromFile++;
+                        ColumnsGoTo = 1;
+                        counter = 1;
+                    }
+
+                   for(String counters : listForSubjects) {
+                       th_call.addRow(new Object[]{counters});
+                   }
+                    th_call.addRow(new Object[]{dateFromFile});
+
+                   tableHours.setValueAt(dateFromFile, (counter - counter) + CountRowFromFile, counter);
+                }
+                reader.close();
+
+            } catch(Exception fileNotFound){
+                // JOptionPane.showMessageDialog(null, "No provide"); // Might be exception by reason of "while" above.
+            }
+            countLinesLocalForObjects();
+            int countRows = tableHours.getRowCount();
+            countRows--;
+
+            while (countRows != listForSubjects.length - 1) {
+                th_call.removeRow(countRows);
+                countRows--;
+            }
+        }
+
+    }
+    static public class CellOfTable extends TableDate implements ActionListener {
+
+        public void actionPerformed(ActionEvent event) {
+
+            JFrame frame_th = new JFrame("Сетка часов");
+            JPanel panelPfButtons = new JPanel();
+            saveTableOfHours = new JButton("Сохранить");
+            saveTableOfHours.addActionListener(new SaveTableOfHours());
+            th_call = new DefaultTableModel();
+            ColumnsCellOfTable();
+            tableHours = new JTable(th_call);
+
+            int wightColumn = 50;
+            int columns = tableHours.getColumnCount();
+            for(int x = 0; x < columns; x++) {
+                if(x != 0) {
+                    tableHours.getColumnModel().getColumn(x).setPreferredWidth(wightColumn);
+                }
+                else {
+                    wightColumn = wightColumn + 20;
+                    tableHours.getColumnModel().getColumn(x).setPreferredWidth(wightColumn);
+                }
+            }
+            tableHours.setRowHeight(20);
+            refreshTableOfHours(wightColumn);
+
+            countLinesLocalForObjects();
+            OutputDataOf_TOH("TableOfHours.ini");
+            tableHours.repaint();
+
+            panelPfButtons.add(saveTableOfHours);
+            frame_th.add(BorderLayout.SOUTH, panelPfButtons);
+            frame_th.add(tableHours);
+
+            pane = new JScrollPane(tableHours, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+                    ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+            tableHours.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+            frame_th.add(BorderLayout.CENTER, pane);
+            frame_th.setSize(1280,720);
+            frame_th.setVisible(true);
+
+            }
+        }
+
+    static public class SaveTableOfHours extends TableDate implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+
+            clearContentForSave();
+
+            int column = tableHours.getColumnCount();
+            int row = tableHours.getRowCount();
+
+            for (int x = 0; x < row; x++) {
+                for (int y = 1; y < column; y++) {
+                    saveTable = tableHours.getValueAt(x, y);
+                    System.out.print("[ " + saveTable + "] ");
+                    try {
+                        FileWriter write = new FileWriter("TableOfHours.ini", true);
+                        write.write(saveTable + "\n");
+                        write.close();
+                        infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(null, "Файл не найден");
+                        infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
+                    }
+                }
+            }
+            saveTable = "";
+        }
+
+        private void clearContentForSave() {
+            try {
+                FileWriter write = new FileWriter("TableOfHours.ini"); // create var
+                write.write("");
+                write.close();
+                infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Файл не найден");
+                infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
+            }
         }
     }
     static public class PrintTable extends TableDate implements ActionListener {
@@ -882,18 +1071,7 @@ public class Main {
 
         }
     }
-    static public class Renderer extends DefaultTableCellRenderer {
-        public Component getTableCellRendererComponent(JTable table,
-                                                       Object value,
-                                                       boolean isSelected,
-                                                       boolean hasFocus,
-                                                       int row,
-                                                       int column) {
-            Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            cell.setBackground(Color.YELLOW);
 
-            return cell;
-        }}
 
     static class AddDate extends Main.TableDate implements ActionListener {
         public void actionPerformed(ActionEvent event) {
@@ -1047,6 +1225,7 @@ public class Main {
                 JOptionPane.showMessageDialog(null, MASSAGE_ERROR_NOT_FOUND_FILE +
                                                                        " " + NAME_ERROR_SUBJECTS);
             }
+            countLinesLocalForObjects();
         }
     }
 
@@ -1100,6 +1279,7 @@ public class Main {
                 JOptionPane.showMessageDialog(null, MASSAGE_ERROR_NOT_FOUND_FILE +
                                                                        " " + NAME_ERROR_NAMES);
             }
+            countLinesLocalForName();
         }
 
     }
@@ -1114,6 +1294,7 @@ public class Main {
         static JLabel placeForConfirmation;
 
         public void actionPerformed(ActionEvent event) {
+
             labelInfo = new JLabel("Запишити группу для сохранения");
 
             addDate = new JButton("Сохранить");
@@ -1144,6 +1325,7 @@ public class Main {
 
             addDate.addActionListener(new SaveGroups());
         }
+
         public void writeDate(String dataSubjects) {
             try {
                 FileWriter isBegin = new FileWriter(FILE_OF_GROUPS, true);
@@ -1154,9 +1336,12 @@ public class Main {
                 JOptionPane.showMessageDialog(null, MASSAGE_ERROR_NOT_FOUND_FILE +
                                                                        " " + NAME_ERROR_GROUPS);
             }
+            countLinesLocalForGroups();
         }
     }
-
+    public static void copy(String sourcePath, String destinationPath) throws IOException { // method for back up
+        Files.copy(Paths.get(sourcePath), new FileOutputStream(destinationPath));
+    }
     static class BuildSchedule extends TableDate implements ActionListener {
         public void actionPerformed(ActionEvent event) {
 
@@ -1199,7 +1384,6 @@ public class Main {
 
             TableSchedule.getColumnModel().getColumn(0).setPreferredWidth(90);
             TableSchedule.setRowHeight(20);
-
         }
     }
 
@@ -1324,6 +1508,13 @@ class SaveGroups extends Main.OpenFormGroups implements ActionListener {
             infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
             textForGroups.setText("");
 
+            sortBoxGroups.removeAllItems();
+            boxGroups.removeAllItems();
+            
+        for(String counter : listForGroups) {
+            boxGroups.addItem(counter);
+            sortBoxGroups.addItem(counter);
+        }
     }
 
 }
@@ -1346,6 +1537,14 @@ class SaveNames extends Main.OpenFormNames implements ActionListener {
             infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
             textForNames.setText("");
 
+
+            sortBoxNames.removeAllItems();
+            boxNames.removeAllItems();
+
+        for(String counter : listForNames) {
+            boxNames.addItem(counter);
+            sortBoxNames.addItem(counter);
+        }
     }
 }
 class SaveSubjects extends Main.OpenFormObject implements ActionListener { /// save date for objects
@@ -1364,6 +1563,11 @@ class SaveSubjects extends Main.OpenFormObject implements ActionListener { /// s
             writeDate(save);
             infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
             textForSubjects.setText("");
+
+            boxSubjects.removeAllItems();
+        for(String counter : listForSubjects) {
+            boxSubjects.addItem(counter);
+        }
     }
 }
 
