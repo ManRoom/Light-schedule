@@ -1,5 +1,4 @@
 
-
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
@@ -10,8 +9,6 @@ import java.awt.event.ItemListener;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.util.stream.Stream;
 
@@ -71,7 +68,6 @@ public class Main {
         static JButton signUp;
         static JButton saveDataNotes;
         static JButton printSavedTable;
-        static JButton viewPrintedVersion;
         static JButton openCellOfTable;
         static JButton saveTableOfHours;
 
@@ -96,7 +92,7 @@ public class Main {
         static String stringWriteSort = "";
         static String dataNotes = "";
 
-        String dateFromFile = "";
+        private String dateFromFile = "";
         String[] listForNames;
         String[] listForGroups;
         String[] listForSubjects;
@@ -125,8 +121,6 @@ public class Main {
                                               "открыть таличную часть для " +
                                               "дальнейшей печати!";
 
-        final String NAME_ERROR_NOT_FOUND_PDF = "Файл для открытия отсутствует!";
-
         static String checkSignIn = "";
         static String condition;
 
@@ -146,7 +140,11 @@ public class Main {
         static DefaultTableModel th_call;
         DefaultCellEditor Storage;
         Object saveTable = "";
-        static String storageGroups = "";
+
+        public void getDateFromFile(String str) {
+            dateFromFile = str;
+        }
+
         public void showPanelCreateAccount() {
             imageBack.setIcon(new ImageIcon("src/bg_dark.jpg"));
 
@@ -172,7 +170,8 @@ public class Main {
         }
 
         public void signInFrame() {
-
+            Icon icon_IOU = new ImageIcon("src/user_icon.png");
+            JLabel iconOfUser = new JLabel(icon_IOU);
             passwordUserCheck = new JPasswordField();
 
             passwordUserCheck.setBorder(null);
@@ -241,13 +240,14 @@ public class Main {
             infoSI_SU.setForeground(new Color(255, 255, 255));
 
             if (condition.equals("notIsEmpty")) {
-                System.out.print(" ");
                 signUp.setEnabled(false);
             }
 
             signUp.addActionListener(new CheckingAuth());
             signIn.addActionListener(new ContinueSI());
             authorization = new JFrame("Вход в систему");
+
+            authorization.setIconImage(Toolkit.getDefaultToolkit().getImage("src/iconOfFrame.png"));
 
             commonPanel = new JPanel();
             commonPanel.setLayout(null);
@@ -260,6 +260,7 @@ public class Main {
 
             System.out.println("Current condition [" + condition + "]");
 
+            iconOfUser.setBounds(800, 150, 100, 100);
             imageBack.setBounds(0, 0, 1200, 600);
             infoSI_SU.setBounds(60, 50, 400, 35);
             passwordUserCheck.setBounds(60, 100, 230, 25);
@@ -276,6 +277,7 @@ public class Main {
             rules.setBounds(620, 235, 225, 30);
             signUpAccount.setBounds(696, 280, 150, 30);
 
+            commonPanel.add(iconOfUser);
             commonPanel.add(passwordUser);
             commonPanel.add(repeatPU);
             commonPanel.add(infoEnter);
@@ -328,7 +330,6 @@ public class Main {
             openFormGroups = new JButton(new ImageIcon("src/add_groups.png"));
             deleteDateFromFiles = new JButton(new ImageIcon("src/delete.png"));
             printSavedTable = new JButton(new ImageIcon("src/print.png"));
-            viewPrintedVersion = new JButton(new ImageIcon("src/viewPrintedVersion.png"));
             openCellOfTable = new JButton(new ImageIcon("src/cellTable.png"));
 
             viewSavedSchedule = new JButton("Просмотр расписания");
@@ -338,15 +339,13 @@ public class Main {
             openFormGroups.setContentAreaFilled(false);
             deleteDateFromFiles.setContentAreaFilled(false);
             printSavedTable.setContentAreaFilled(false);
-            viewPrintedVersion.setContentAreaFilled(false);
             openCellOfTable.setContentAreaFilled(false);
 
-            openFormSubjects.addActionListener(new OpenFormObject());
+            openFormSubjects.addActionListener(new OpenFormSubject());
             openFormNames.addActionListener(new OpenFormNames());
             openFormGroups.addActionListener(new OpenFormGroups());
             deleteDateFromFiles.addActionListener(new DeleteAllDates());
             printSavedTable.addActionListener(new PrintTable());
-            viewPrintedVersion.addActionListener(new ViewSavedData());
             viewSavedSchedule.addActionListener(new ViewSaveSchedule());
             openCellOfTable.addActionListener(new CellOfTable());
 
@@ -361,7 +360,8 @@ public class Main {
 
             saveDataNotes = new JButton("Сохранить");
             saveDataNotes.addActionListener(new SaveDataNotes());
-            mainFrame = new JFrame();
+            mainFrame = new JFrame("Помощник в составлени расписания");
+            mainFrame.setIconImage(Toolkit.getDefaultToolkit().getImage("src/iconOfFrame.png"));
             setLayout(null);
 
             textForGroups = new JTextField(30);
@@ -401,13 +401,10 @@ public class Main {
             printSavedTable.setBounds(10, 200, 32,32);
             printSavedTable.setToolTipText("<html> Создать печатную форму </html>");
 
-            viewPrintedVersion.setBounds(10, 260, 32,32);
-            viewPrintedVersion.setToolTipText("<html> Просмотреть печатную форму </html>");
-
-            deleteDateFromFiles.setBounds(10, 320, 32,32);
+            deleteDateFromFiles.setBounds(10, 260, 32,32);
             deleteDateFromFiles.setToolTipText("<html> Удалить данные </html>");
 
-            openCellOfTable.setBounds(10, 380, 32,32);
+            openCellOfTable.setBounds(10, 320, 32,32);
             openCellOfTable.setToolTipText("<html> Открыть таблицу часов </html>");
 
             boxSubjects.setBounds(70, 40, 225, 30);
@@ -468,7 +465,6 @@ public class Main {
 
 
             mainFrame.add(openCellOfTable);
-            mainFrame.add(viewPrintedVersion);
             mainFrame.add(printSavedTable);
             mainFrame.add(infoAboutEvent);
             mainFrame.add(notesInfo);
@@ -511,6 +507,7 @@ public class Main {
 
             TableSchedule.setVisible(true);
             frameOfTable = new JFrame("Табличное представление данных");
+            frameOfTable.setIconImage(Toolkit.getDefaultToolkit().getImage("src/iconOfFrame.png"));
             lowPanel = new JPanel();
 
             if (condition.equals("LimitedMode")) {
@@ -647,7 +644,7 @@ public class Main {
                                                 "12:45 - 14:15",
                                                 "14:30 - 16:00"};
             nameFile = FILE_OF_TABLE_BS;
-
+            String dataForWrite = "";
             int counter = 0;
             int countLinesForStop = linesCount;
             int ColumnsGoTo = 0;
@@ -663,8 +660,9 @@ public class Main {
                 while (!dateFromFile.equals(" ")) {
                     //timeLessons++;
                     linesCount--;
+                    getDateFromFile(dataForWrite);
                     try (Stream<String> lines = Files.lines(Paths.get(nameFile))) {
-                        dateFromFile = lines.skip(linesGoTo).findFirst().get(); // back method through '-'
+                        dataForWrite = lines.skip(linesGoTo).findFirst().get(); // back method through '-'
                         linesGoTo++;
                         counter++;
                         ColumnsGoTo++;
@@ -678,8 +676,8 @@ public class Main {
                         countLessons = 0;
                     }
 
-                    model.addRow(new Object[]{timeLessons[countLessons], dateFromFile, "", "", "", ""});
-                    TableSchedule.setValueAt(dateFromFile, (counter - counter) + CountRowFromFile, counter);
+                    model.addRow(new Object[]{timeLessons[countLessons], dataForWrite, "", "", "", ""});
+                    TableSchedule.setValueAt(dataForWrite, (counter - counter) + CountRowFromFile, counter);
                     countLessons++;
 
                 }
@@ -976,6 +974,8 @@ public class Main {
         public void actionPerformed(ActionEvent event) {
 
             JFrame frame_th = new JFrame("Сетка часов");
+            frame_th.setIconImage(Toolkit.getDefaultToolkit().getImage("src/iconOfFrame.png"));
+
             JPanel panelPfButtons = new JPanel();
             saveTableOfHours = new JButton("Сохранить");
             saveTableOfHours.addActionListener(new SaveTableOfHours());
@@ -1058,6 +1058,7 @@ public class Main {
         public void actionPerformed(ActionEvent ev) {
 
             JFrame frameOfSelectPrint = new JFrame("Выбор таблицы для печати");
+            frameOfSelectPrint.setIconImage(Toolkit.getDefaultToolkit().getImage("src/iconOfFrame.png"));
 
             ImageIcon iconPrint = new ImageIcon("src/print_at_frame_FOP.png");
             JLabel contentIcon = new JLabel(iconPrint);
@@ -1118,31 +1119,18 @@ public class Main {
 
         }
     }
-    static public class ViewSavedData extends TableDate implements ActionListener {
-        public void actionPerformed(ActionEvent event) {
-           if (Desktop.isDesktopSupported()) {
-                try {
-                    File myFile = new File("src/TI.pdf");
-                    Desktop.getDesktop().open(myFile);
-                } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(null,  NAME_ERROR_NOT_FOUND_PDF);
-                }
-            }
-
-        }
-    }
 
 
     static class AddDate extends Main.TableDate implements ActionListener {
         public void actionPerformed(ActionEvent event) {
+
             generalLst.append(stringWrite + "\n");
             generalLst.append("-------------------------------------------------------------------------------" + "\n");
 
             System.out.print("adding line is --> [" + stringWrite + "]\n");
-            try {
-                FileWriter write = new FileWriter(FILE_OF_TABLE_BS, true);
+
+            try (FileWriter write = new FileWriter(FILE_OF_TABLE_BS, true)) {
                 write.write(stringWrite + "\n");
-                write.close();
             }
             catch (IOException e) {
                 JOptionPane.showMessageDialog(null, "Запись не может быть завершена");
@@ -1186,6 +1174,7 @@ public class Main {
                 mainFrame.setVisible(true);
                 System.out.println("Current condition [" + condition + "]");
             }
+
             if (!localCheck.equals(checkSignIn) & !localCheck.isEmpty()) {
                 passwordUserCheck.setBorder(BorderFactory.createLineBorder(COLOR_BORDER_WRONG));
             }
@@ -1234,7 +1223,7 @@ public class Main {
         }
     }
 
-    static class OpenFormObject extends TableDate implements ActionListener {
+    static class OpenFormSubject extends TableDate implements ActionListener {
         JFrame FrameForSubjects;
         JButton addDate;
         JPanel panelOfComponents;
@@ -1260,7 +1249,7 @@ public class Main {
             textForSubjects.setBounds(30, 50, 240, 27);
 
             placeForConfirmation.setBounds(270, 20, 100, 50);
-            addDate.setBounds(130, 80, 140, 25);
+            addDate.setBounds(130, 80, 140, 27);
 
             panelOfComponents.add(labelInfoFrame);
             panelOfComponents.add(textForSubjects);
@@ -1268,6 +1257,8 @@ public class Main {
             panelOfComponents.add(addDate);
 
             FrameForSubjects = new JFrame("Добавить дисциплину");
+            FrameForSubjects.setIconImage(Toolkit.getDefaultToolkit().getImage("src/iconOfFrame.png"));
+
             FrameForSubjects.add(panelOfComponents);
             FrameForSubjects.setSize(400, 160);
 
@@ -1279,10 +1270,8 @@ public class Main {
         }
 
         public void writeDate(String dataObjects) {
-            try {
-                FileWriter isBegin = new FileWriter(FILE_OF_SUBJECTS, true);
+            try ( FileWriter isBegin = new FileWriter(FILE_OF_SUBJECTS, true)) {
                 isBegin.write(dataObjects + "\n");
-                isBegin.close();
             }
             catch (Exception fileNotFound) {
                 JOptionPane.showMessageDialog(null, MASSAGE_ERROR_NOT_FOUND_FILE +
@@ -1317,7 +1306,7 @@ public class Main {
             labelInfo.setBounds(20, 20, 225, 20);
             textForNames.setBounds(20, 50, 225, 27);
             placeForConfirmation.setBounds(250, 20, 100, 50);
-            addDate.setBounds(120, 80, 125, 25);
+            addDate.setBounds(120, 80, 125, 27);
 
             panelOfComponents.add(textForNames);
             panelOfComponents.add(labelInfo);
@@ -1325,6 +1314,8 @@ public class Main {
             panelOfComponents.add(placeForConfirmation);
 
             frameForNames = new JFrame("Добавить имя");
+            frameForNames.setIconImage(Toolkit.getDefaultToolkit().getImage("src/iconOfFrame.png"));
+
             frameForNames.add(panelOfComponents);
             frameForNames.setSize(400, 160);
             frameForNames.setVisible(true);
@@ -1379,10 +1370,11 @@ public class Main {
             labelInfo.setBounds(20, 20, 225, 20);
             textForGroups.setBounds(20, 50, 225, 27);
             placeForConfirmation.setBounds(250, 20, 100, 50);
-            addDate.setBounds(120, 80, 125, 25);
+            addDate.setBounds(120, 80, 125, 27);
 
 
             FrameForGroups = new JFrame("Добавить группу в список");
+            FrameForGroups.setIconImage(Toolkit.getDefaultToolkit().getImage("src/iconOfFrame.png"));
 
             FrameForGroups.setSize(400, 160);
             FrameForGroups.add(panelOfComponents);
@@ -1423,6 +1415,8 @@ public class Main {
             TableSchedule.setVisible(true);
 
             frameOfTable = new JFrame("Созданное расписание");
+            frameOfTable.setIconImage(Toolkit.getDefaultToolkit().getImage("src/iconOfFrame.png"));
+
             lowPanel = new JPanel();
 
             beginBuild = new JButton("Сохранить");
@@ -1478,7 +1472,7 @@ public class Main {
         public void actionPerformed(ActionEvent event) {
             String checkForAvailability = "";
             try {
-                FileReader read = new FileReader("Check.txt");
+                FileReader read = new FileReader("Check.ini");
                 BufferedReader buffer =  new BufferedReader(read);
                 checkForAvailability = buffer.readLine();
                 read.close();
@@ -1615,7 +1609,7 @@ class SaveNames extends Main.OpenFormNames implements ActionListener {
         }
     }
 }
-class SaveSubjects extends Main.OpenFormObject implements ActionListener { /// save date for objects
+class SaveSubjects extends Main.OpenFormSubject implements ActionListener { /// save date for objects
     public void actionPerformed(ActionEvent event) {
         save = textForSubjects.getText();
         labelInfoFrame.setForeground(COLOR_BORDER_SUCCESS);
