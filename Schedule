@@ -9,10 +9,22 @@ import java.awt.event.ItemListener;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.GregorianCalendar;
 import java.util.StringTokenizer;
 import java.util.stream.Stream;
 
 public class Main {
+
+    static JLabel lblMonth, lblYear;
+    static JButton btnPrev, btnNext;
+    static JTable tblCalendar;
+    static JComboBox cmbYear;
+    static Container container;
+    static DefaultTableModel mtblCalendar;
+    static JScrollPane stblCalendar;
+    static JPanel pnlCalendar;
+    static int realYear, realMonth, realDay, currentYear, currentMonth;
+
     public static void main(String[] args) {
        try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
@@ -27,8 +39,6 @@ public class Main {
 
 
         TableDate isStart = new TableDate();
-
-        //isStart.helloFrame();
         isStart.signInFrame();
 
         isStart.mainFrame();
@@ -39,107 +49,130 @@ public class Main {
 
     static class TableDate extends JFrame implements ActionListener {
 
-        final static String FILE_OF_TABLE_BS = "DoneSchedule.ini";
-        final static String FILE_OF_NAMES = "NamesList.ini";
-        final static String FILE_OF_GROUPS = "GroupsList.ini";
-        final static String FILE_OF_SUBJECTS = "SubjectsList.ini";
-        final static String FILE_OF_REPOSITORY = "Repository.ini";
-        final static String FILE_OF_TABLE_HOURS = "TableOfHours.ini";
-        static JTable TableSchedule;
-        static JTable tableHours;
-        static JPanel lowPanel;
-        static JPanel commonPanel;
+        final static String FILE_OF_TABLE_BS = "DoneSchedule.ini",
+                            FILE_CHECK_SAVE_DATE = "Check.ini",
+                            FILE_OF_NAMES = "NamesList.ini",
+                            FILE_OF_GROUPS = "GroupsList.ini",
+                            FILE_OF_SUBJECTS = "SubjectsList.ini",
+                            FILE_OF_REPOSITORY = "Repository.ini",
+                            FILE_OF_TABLE_HOURS = "TableOfHours.ini",
+                            FILE_OF_USER_DATE = "UserOfDate.ini";
+
+        static JTable TableSchedule,
+                      tableHours;
+        static JPanel lowPanel,
+                      commonPanel;
         JFrame frameOfTable;
+
         static JFrame mainFrame;
         static JFrame authorization;
         static JTextArea generalLst;
         static JTextArea notes;
-        static JButton openFormSubjects;
-        static JButton openFormNames;
-        static JButton openFormGroups;
-        static JButton viewSavedSchedule;
-        static JButton addDateToFile;
-        static JButton createSchedule;
-        static JButton beginBuild;
-        static JButton deleteDateFromFiles;
-        static JButton sortOnClick;
-        static JButton signIn;
-        static JButton signUpAccount;
-        static JButton signUp;
-        static JButton saveDataNotes;
-        static JButton printSavedTable;
-        static JButton openCellOfTable;
-        static JButton saveTableOfHours;
 
-        static JLabel infoAboutOperation;
-        static JLabel infoEnter;
-        static JLabel infoRepeat;
-        static JLabel rule;
-        static JLabel imageBack;
-        static JLabel icon;
-        static JLabel infoSI_SU;
-        static JLabel infoAboutEvent;
+        static JButton openFormSubjects,
+                       openFormNames,
+                       openFormGroups,
+                       viewSavedSchedule,
+                       addDateToFile,
+                       createSchedule,
+                       beginBuild,
+                       deleteDateFromFiles,
+                       sortOnClick,
+                       signIn,
+                       signUpAccount,
+                       signUp,
+                       saveDataNotes,
+                       printSavedTable,
+                       openCellOfTable,
+                       saveTableOfHours,
+                       backUpOfData,
+                       recoveryOfDate;
+
+        static JLabel infoAboutOperation,
+                      infoEnter,
+                      infoRepeat,
+                      rule,
+                      imageBack,
+                      icon,
+                      infoSI_SU,
+                      infoAboutEvent;
 
         JScrollPane pane;
-        JTextField isText;
-        JTextField textForGroups;
-        JTextField textForNames;
-        JTextField textForSubjects;
+        JTextField isText,
+                   textForGroups,
+                   textForNames,
+                   textForSubjects;
         static JTextField rules;
 
-        static String DataForTable = "";
-        static String stringWrite = "";
-        static String stringWriteSort = "";
-        static String dataNotes = "";
+        static String DataForTable = "",
+                      stringWrite = "",
+                      stringWriteSort = "",
+                      dataNotes = "",
+                      checkSignIn = "",
+                      condition,
+                      dateFromFile = "";
 
-        private String dateFromFile = "";
         String[] listForNames;
         String[] listForGroups;
         String[] listForSubjects;
         String line = "";
 
-        int linesCount = 0;
-        int linesCountForNew = 0;
-        int lineCountForNames = 0;
-        int linesCountsForGroups = 0;
-        int linesCountsForSubjects = 0;
+        int linesCount = 0,
+            linesCountForNew = 0,
+            lineCountForNames = 0,
+            linesCountsForGroups = 0,
+            linesCountsForSubjects = 0;
 
-        static JComboBox<String> boxNames;
-        static JComboBox<String> boxGroups;
-        static JComboBox<String> boxSubjects;
-        static JComboBox<String> sortBoxNames;
-        static JComboBox<String> sortBoxGroups;
+        static JComboBox<String> boxNames,
+                                 boxGroups,
+                                 boxSubjects,
+                                 sortBoxNames,
+                                 sortBoxGroups;
 
-        final String MASSAGE_ERROR_NOT_FOUND_FILE = "Отсутствует файл";
-        final String NAME_ERROR_SUBJECTS = "Дисциплины";
-        final String NAME_ERROR_GROUPS = "Группы";
-        final String NAME_ERROR_NAMES = "Имена";
-        final String INFO_ABOUT_WORK = "Предварительно необходимо " +
-                                       "выбрать параметр для сортировки";
-
-        final String ATTENTION_NOT_SELECTED_TABLE = "Предварительно необходимо " +
+        final String MASSAGE_ERROR_NOT_FOUND_FILE = "Отсутствует файл",
+                     NAME_ERROR_SUBJECTS = "Дисциплины",
+                     NAME_ERROR_GROUPS = "Группы",
+                     NAME_ERROR_NAMES = "Имена",
+                     NAME_ERROR_NOTES= "Заметки",
+                     NAME_ERROR_TABLE = "Таблица составления расписания",
+                     NAME_ERROR_TABLE_OF_SAVE = "Таблица сохранения расписания",
+                     NAME_ERROR_TABLE_OF_HOURS = "Таблица часов",
+                     INFO_ABOUT_WORK = "Предварительно необходимо " +
+                                       "выбрать параметр для сортировки",
+                    ATTENTION_NOT_SELECTED_TABLE = "Предварительно необходимо " +
                                               "открыть таличную часть для " +
-                                              "дальнейшей печати!";
+                                              "дальнейшей печати!",
+                     INFO_RECOVERY = "<html> Вы действительно хотите восстановить в исходное состояние? " +
+                                     "<br/>" +
+                                     "Данная процедура создаст новые базы данных для дальнейшей работы " +
+                                     "без сохранения данных предыдущих баз (если они имеются)" +
+                                     "<br/>" +
+                                     "Это операция необходима при возникновении проблем с" +
+                                     " отсутствием чтения данных </html> ",
 
-        static String checkSignIn = "";
-        static String condition;
+                      INFO_ABOUT_SU = "<html> Для продолжения создайте <br/> " +
+                                      "новую учетную запись! </html>",
+                      INFO_ABOUT_SI = "Войдите как администратор или продолжите";
 
-        static JPasswordField passwordUser;
-        static JPasswordField repeatPU;
-        static JPasswordField passwordUserCheck;
+        static JPasswordField passwordUser,
+                              repeatPU,
+                              passwordUserCheck;
 
-        final String INFO_ABOUT_SU = "<html> Для продолжения создайте <br/> " +
-                                     "новую учетную запись! </html>";
-        final String INFO_ABOUT_SI = "Войдите как администратор или продолжите";
+
 
         final Color COLOR_BORDER_WRONG = new Color(214, 63, 17);
         final Color COLOR_BORDER_SUCCESS = new Color(63, 132, 17);
 
         DefaultTableModel newModelForStorage;
+
         static DefaultTableModel model;
         static DefaultTableModel th_call;
+
         DefaultCellEditor Storage;
+
         Object saveTable = "";
+
+        static JProgressBar progressBar;
 
         public void getDateFromFile(String str) {
             dateFromFile = str;
@@ -170,16 +203,14 @@ public class Main {
         }
 
         public void signInFrame() {
-            Icon icon_IOU = new ImageIcon("src/user_icon.png");
-            JLabel iconOfUser = new JLabel(icon_IOU);
+
             passwordUserCheck = new JPasswordField();
 
             passwordUserCheck.setBorder(null);
             signIn = new JButton("Войти");
             signUp = new JButton("Создать");
 
-            try {
-                FileReader dateFromUoD = new FileReader("UserOfDate.ini");
+            try (FileReader dateFromUoD = new FileReader(FILE_OF_USER_DATE)) {
                 BufferedReader begin = new BufferedReader(dateFromUoD);
                 checkSignIn = begin.readLine();
 
@@ -204,8 +235,8 @@ public class Main {
 
             imageBack = new JLabel(new ImageIcon("src/bg.jpg")); // or IMG.
 
-            infoAboutOperation = new JLabel("<html>Создайте пароль для " +
-                                                 "дальнейшей аутентификации</html> ");
+            infoAboutOperation = new JLabel("<html> Создайте пароль для " +
+                                                 "дальнейшей аутентификации </html> ");
 
             infoEnter = new JLabel("Введите пароль");
             infoRepeat = new JLabel("Повторите пароль");
@@ -260,7 +291,6 @@ public class Main {
 
             System.out.println("Current condition [" + condition + "]");
 
-            iconOfUser.setBounds(800, 150, 100, 100);
             imageBack.setBounds(0, 0, 1200, 600);
             infoSI_SU.setBounds(60, 50, 400, 35);
             passwordUserCheck.setBounds(60, 100, 230, 25);
@@ -277,7 +307,6 @@ public class Main {
             rules.setBounds(620, 235, 225, 30);
             signUpAccount.setBounds(696, 280, 150, 30);
 
-            commonPanel.add(iconOfUser);
             commonPanel.add(passwordUser);
             commonPanel.add(repeatPU);
             commonPanel.add(infoEnter);
@@ -302,11 +331,77 @@ public class Main {
 
 
         public void mainFrame() {
+            container = new Container();
+            container.setLayout(null);
+
+            lblMonth = new JLabel ("January");
+            lblYear = new JLabel ("Change year:");
+            cmbYear = new JComboBox();
+            btnPrev = new JButton (new ImageIcon("src/left_way.png"));
+            btnNext = new JButton (new ImageIcon("src/right_way.png"));
+            mtblCalendar = new DefaultTableModel(){public boolean isCellEditable(int rowIndex, int mColIndex){return false;}};
+            tblCalendar = new JTable(mtblCalendar);
+            stblCalendar = new JScrollPane(tblCalendar);
+            pnlCalendar = new JPanel(null);
+
+            btnPrev.addActionListener(new btnPrev_Action());
+            btnNext.addActionListener(new btnNext_Action());
+            cmbYear.addActionListener(new cmbYear_Action());
+
+
+            pnlCalendar.add(lblMonth);
+            pnlCalendar.add(lblYear);
+            pnlCalendar.add(cmbYear);
+            pnlCalendar.add(btnPrev);
+            pnlCalendar.add(btnNext);
+            pnlCalendar.add(stblCalendar);
+
+            pnlCalendar.setBounds(100, 305, 401, 203);
+            lblMonth.setBounds(85, 1, 70, 25);
+            cmbYear.setBounds(319, 1, 80, 25);
+            btnPrev.setBounds(1, 1, 50, 25);
+            btnNext.setBounds(170, 1, 50, 25);
+            stblCalendar.setBounds(1, 25, 400, 178);
+
+            btnPrev.setContentAreaFilled(false);
+            btnNext.setContentAreaFilled(false);
+
+
+            GregorianCalendar cal = new GregorianCalendar();
+            realDay = cal.get(GregorianCalendar.DAY_OF_MONTH);
+            realMonth = cal.get(GregorianCalendar.MONTH);
+            realYear = cal.get(GregorianCalendar.YEAR);
+            currentMonth = realMonth;
+            currentYear = realYear;
+
+            String[] headers = {"Пн.", "Вт.", "Ср.", "Чт.", "Пт.", "Сб.", "Вс"};
+            for (int i = 0; i < 7; i++){
+                mtblCalendar.addColumn(headers[i]);
+            }
+
+            tblCalendar.getParent().setBackground(tblCalendar.getBackground()); //Set background
+
+            tblCalendar.getTableHeader().setResizingAllowed(false);
+            tblCalendar.getTableHeader().setReorderingAllowed(false);
+
+
+            tblCalendar.setColumnSelectionAllowed(true);
+            tblCalendar.setRowSelectionAllowed(true);
+            tblCalendar.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+
+            tblCalendar.setRowHeight(25);
+            mtblCalendar.setColumnCount(7);
+            mtblCalendar.setRowCount(6);
+
+            for (int i = realYear - 100; i <= realYear + 100; i++){
+                cmbYear.addItem(String.valueOf(i));
+            }
+
+            refreshCalendar (realMonth, realYear);
 
             notes = new JTextArea(5,50);
-            try {
-                File save = new File("DataNotes.ini");
-                FileReader fr = new FileReader(save);
+            try (FileReader fr = new FileReader("DataNotes.ini")) {
                 BufferedReader reader = new BufferedReader(fr);
                 while (dataNotes != null) {
                     dataNotes = reader.readLine();
@@ -314,7 +409,8 @@ public class Main {
                 }
                 reader.close();
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Данные количества не определенны");
+                JOptionPane.showMessageDialog(null, "Данные не определенны "
+                                                                             + NAME_ERROR_NOTES);
             }
 
             infoAboutEvent = new JLabel();
@@ -324,7 +420,8 @@ public class Main {
             JLabel notesInfo = new JLabel("Заметка: ");
             generalLst = new JTextArea(8, 35);
 
-
+            recoveryOfDate = new JButton(new ImageIcon("src/recovery.png"));
+            backUpOfData = new JButton(new ImageIcon("src/back_up.png"));
             openFormSubjects = new JButton(new ImageIcon("src/add_subjects.png"));
             openFormNames = new JButton(new ImageIcon("src/add_names.png"));
             openFormGroups = new JButton(new ImageIcon("src/add_groups.png"));
@@ -340,6 +437,8 @@ public class Main {
             deleteDateFromFiles.setContentAreaFilled(false);
             printSavedTable.setContentAreaFilled(false);
             openCellOfTable.setContentAreaFilled(false);
+            recoveryOfDate.setContentAreaFilled(false);
+            backUpOfData.setContentAreaFilled(false);
 
             openFormSubjects.addActionListener(new OpenFormSubject());
             openFormNames.addActionListener(new OpenFormNames());
@@ -348,6 +447,8 @@ public class Main {
             printSavedTable.addActionListener(new PrintTable());
             viewSavedSchedule.addActionListener(new ViewSaveSchedule());
             openCellOfTable.addActionListener(new CellOfTable());
+            recoveryOfDate.addActionListener(new FormOfRecovery());
+            backUpOfData.addActionListener(new BackUpOfDate());
 
             createSchedule = new JButton("Создать расписание");
             createSchedule.addActionListener(new BuildSchedule());
@@ -396,7 +497,7 @@ public class Main {
 
             openFormGroups.setBounds(10, 140, 32,32);
             openFormGroups.setToolTipText("<html> Открыть форму для заполнения " +
-                                         "<br/> данными о группах </html>");
+                                          "<br/> данными о группах </html>");
 
             printSavedTable.setBounds(10, 200, 32,32);
             printSavedTable.setToolTipText("<html> Создать печатную форму </html>");
@@ -407,6 +508,12 @@ public class Main {
             openCellOfTable.setBounds(10, 320, 32,32);
             openCellOfTable.setToolTipText("<html> Открыть таблицу часов </html>");
 
+            recoveryOfDate.setBounds(10, 380, 32,32);
+            recoveryOfDate.setToolTipText("<html> Восстановить базу данных </html>");
+
+            backUpOfData.setBounds(10, 440, 32,32);
+            backUpOfData.setToolTipText("<html> Создание резервной копии данных </html>");
+
             boxSubjects.setBounds(70, 40, 225, 30);
             boxNames.setBounds(70, 80, 225, 30);
             boxGroups.setBounds(70, 120, 225, 30);
@@ -414,15 +521,14 @@ public class Main {
             addDateToFile.setBounds(190, 170, 100, 30);
             createSchedule.setBounds(330, 190, 170, 30);
             sortOnClick.setBounds(750, 190, 120, 30);
-            notes.setBounds(750, 310, 350, 140);
-            saveDataNotes.setBounds(1010, 460, 110, 30);
+            saveDataNotes.setBounds(940, 520, 110, 30);
 
 
             infoAboutAll.setBounds(750, 35, 350, 25);
             infoAboutAll.setFont(new Font("Tahoma", Font.BOLD, 14));
             infoAboutAll.setForeground(Color.WHITE);
 
-            notesInfo.setBounds(750, 220, 225, 140);
+            notesInfo.setBounds(550, 205, 225, 140);
             notesInfo.setFont(new Font("Tahoma", Font.BOLD, 14));
             notesInfo.setForeground(Color.WHITE);
 
@@ -458,12 +564,13 @@ public class Main {
 
             scrollNotes.getViewport().setBackground(Color.WHITE);
             scrollNotes.getViewport().add(notes);
-            scrollNotes.setBounds(750, 310, 370, 140);
+            scrollNotes.setBounds(550, 301, 500, 208);
 
             ImageIcon backgroundImage = new ImageIcon("src/Background.jpg");
 
-
-
+            mainFrame.add(pnlCalendar);
+            mainFrame.add(backUpOfData);
+            mainFrame.add(recoveryOfDate);
             mainFrame.add(openCellOfTable);
             mainFrame.add(printSavedTable);
             mainFrame.add(infoAboutEvent);
@@ -494,7 +601,102 @@ public class Main {
             mainFrame.setLocationRelativeTo(null);
             mainFrame.setVisible(false);
         }
+        public static void refreshCalendar(int month, int year){
 
+            String[] months =  {"Январь",
+                                "Февраль",
+                                "Март",
+                                "Апрель",
+                                "Май",
+                                "Июнь",
+                                "Июль",
+                                "Август",
+                                "Сентябрь",
+                                "Октябрь",
+                                "Ноябрь",
+                                "Декабрь"};
+            int nod, som;
+
+            btnPrev.setEnabled(true);
+            btnNext.setEnabled(true);
+            if (month == 0 && year <= realYear - 10){btnPrev.setEnabled(false);}
+            if (month == 11 && year >= realYear + 100){btnNext.setEnabled(false);}
+            lblMonth.setText(months[month]);
+
+            cmbYear.setSelectedItem(String.valueOf(year));
+
+            for (int i=0; i < 6; i++){
+                for (int j = 0; j < 7; j++){
+                    mtblCalendar.setValueAt(null, i, j);
+                }
+            }
+
+            GregorianCalendar cal = new GregorianCalendar(year, month, 1);
+            nod = cal.getActualMaximum(GregorianCalendar.DAY_OF_MONTH);
+            som = cal.get(GregorianCalendar.DAY_OF_WEEK);
+
+            for (int i=1; i<=nod; i++){
+                int row = new Integer((i+som-2)/7);
+                int column  =  (i+som-2)%7;
+                mtblCalendar.setValueAt(i, row, column);
+            }
+
+            tblCalendar.setDefaultRenderer(tblCalendar.getColumnClass(0), new tblCalendarRenderer());
+        }
+
+        static class tblCalendarRenderer extends DefaultTableCellRenderer{
+            public Component getTableCellRendererComponent (JTable table, Object value, boolean selected, boolean focused, int row, int column){
+                super.getTableCellRendererComponent(table, value, selected, focused, row, column);
+                if (column == 0 || column == 6){
+                    setBackground(new Color(255, 220, 220));
+                }
+                else {
+                    setBackground(new Color(255, 255, 255));
+                }
+                if (value != null){
+                    if (Integer.parseInt(value.toString()) == realDay && currentMonth == realMonth && currentYear == realYear){ //Today
+                        setBackground(new Color(220, 220, 255));
+                    }
+                }
+                setBorder(null);
+                setForeground(Color.black);
+                return this;
+            }
+        }
+
+        static class btnPrev_Action implements ActionListener{
+            public void actionPerformed (ActionEvent e){
+                if (currentMonth == 0){
+                    currentMonth = 11;
+                    currentYear -= 1;
+                }
+                else {
+                    currentMonth -= 1;
+                }
+                refreshCalendar(currentMonth, currentYear);
+            }
+        }
+        static class btnNext_Action implements ActionListener{
+            public void actionPerformed (ActionEvent e){
+                if (currentMonth == 11){
+                    currentMonth = 0;
+                    currentYear += 1;
+                }
+                else {
+                    currentMonth += 1;
+                }
+                refreshCalendar(currentMonth, currentYear);
+            }
+        }
+        static class cmbYear_Action implements ActionListener{
+            public void actionPerformed (ActionEvent e){
+                if (cmbYear.getSelectedItem() != null){
+                    String b = cmbYear.getSelectedItem().toString();
+                    currentYear = Integer.parseInt(b);
+                    refreshCalendar(currentMonth, currentYear);
+                }
+            }
+        }
         public void viewSchedule() {
 
             isText = new JTextField(30);
@@ -537,41 +739,39 @@ public class Main {
 
         public void countLinesGeneralForTable() {
             linesCount = 0;
-            try {
-                LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_TABLE_BS));
+            try (LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_TABLE_BS))) {
                 while (null != lnr.readLine()) {
                     linesCount++;
                 }
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Данные количества не определенны");
+                JOptionPane.showMessageDialog(null, "Данные не определенны "
+                                                                             + NAME_ERROR_TABLE);
             }
         }
 
         public void countLinesGeneralForTableOut() {
             linesCountForNew = 0;
-            try {
-                LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_REPOSITORY));
+            try (LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_REPOSITORY))) {
                 while (null != lnr.readLine()) {
                     linesCountForNew++;
                 }
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Данные количества не определенны");
+                JOptionPane.showMessageDialog(null, "Данные не определенны "
+                                                                             + NAME_ERROR_TABLE_OF_SAVE);
             }
         }
 
         public void countLinesLocalForName() {
-            try {
-                LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_NAMES));
+            try (LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_NAMES))) {
                 while (null != lnr.readLine()) {
                     lineCountForNames++;
                 }
             } catch (IOException ex) {
-
+                JOptionPane.showMessageDialog(null, "Данные не определенны "
+                                                                             + NAME_ERROR_NAMES);
             }
             listForNames = new String[lineCountForNames];
-            try {
-                File save = new File(FILE_OF_NAMES);
-                FileReader fr = new FileReader(save);
+            try (FileReader fr = new FileReader(FILE_OF_NAMES)) {
                 BufferedReader reader = new BufferedReader(fr);
                 while ((line = reader.readLine()) != null) {
                     lineCountForNames--;
@@ -579,25 +779,23 @@ public class Main {
                 }
                 reader.close();
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Данные количества не определенны");
+
             }
         }
 
         public void countLinesLocalForGroups() {
 
-            try {
-                LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_GROUPS));
+            try (LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_GROUPS))) {
                 while (null != lnr.readLine()) {
                     linesCountsForGroups++;
                 }
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Данные количества не определенны");
+                JOptionPane.showMessageDialog(null, "Данные не определенны "
+                                                                             + NAME_ERROR_GROUPS);
             }
             listForGroups = new String[linesCountsForGroups];
 
-            try {
-                File save = new File(FILE_OF_GROUPS);
-                FileReader fr = new FileReader(save);
+            try ( FileReader fr = new FileReader(FILE_OF_GROUPS)) {
                 BufferedReader reader = new BufferedReader(fr);
                 while ((line = reader.readLine()) != null) {
                     linesCountsForGroups--;
@@ -605,25 +803,23 @@ public class Main {
                 }
                 reader.close();
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Данные количества не определенны");
+
             }
 
         }
 
         public void countLinesLocalForObjects() {
-            try {
-                LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_SUBJECTS));
+            try (LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_SUBJECTS))) {
                 while (null != lnr.readLine()) {
                     linesCountsForSubjects++;
                 }
             } catch (IOException ex) {
-
+                JOptionPane.showMessageDialog(null, "Данные не определенны "
+                                                                             + NAME_ERROR_SUBJECTS);
             }
 
             listForSubjects = new String[linesCountsForSubjects];
-            try {
-                File save = new File(FILE_OF_SUBJECTS);
-                FileReader fr = new FileReader(save);
+            try (FileReader fr = new FileReader(FILE_OF_SUBJECTS)) {
                 BufferedReader reader = new BufferedReader(fr);
                 while ((line = reader.readLine()) != null) {
                     linesCountsForSubjects--;
@@ -631,7 +827,7 @@ public class Main {
                 }
                 reader.close();
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Данные количества не определенны");
+
             }
         }
 
@@ -653,9 +849,8 @@ public class Main {
             int column = TableSchedule.getColumnCount();
             int countColumn = column;
             int countLessons = 0;
-            try {
-                File e = new File(nameFile);
-                FileReader f = new FileReader(e);
+
+            try ( FileReader f = new FileReader(nameFile)) {
                 BufferedReader reader = new BufferedReader(f);
                 while (!dateFromFile.equals(" ")) {
                     //timeLessons++;
@@ -695,10 +890,11 @@ public class Main {
 
         public void OutputDateForNew(String nameFile) {
             countLinesGeneralForTableOut();
-            String[] timeLessons = new String[]{"07:20 - 8:50",
+            String[] timeLessons = new String[]{"08:20 - 08:50",
                                                 "09:00 - 10:30",
                                                 "10:45 - 12:15",
-                                                "12:45 - 14:15"};
+                                                "12:45 - 14:15",
+                                                "14:30 - 16:00"};
 
             int counter = 0;
             int countLinesForStop = linesCountForNew;
@@ -806,9 +1002,7 @@ public class Main {
             Storage = new DefaultCellEditor(data);
             for (int x = 1; x <= 6; x++)
                 TableSchedule.getColumnModel().getColumn(x).setCellEditor(Storage);
-            try {
-                File file = new File(FILE_OF_TABLE_BS);
-                FileReader na = new FileReader(file);
+            try (FileReader na = new FileReader(FILE_OF_TABLE_BS)) {
                 BufferedReader reader = new BufferedReader(na);
                 na.getEncoding();
                 while (DataForTable != null) {
@@ -851,10 +1045,8 @@ public class Main {
         }
 
         public void clearFileForSave() {
-            try {
-                FileWriter write = new FileWriter(FILE_OF_REPOSITORY);
+            try (FileWriter write = new FileWriter(FILE_OF_REPOSITORY)) {
                 write.write("");
-                write.close();
             }
             catch (IOException e) {
                 JOptionPane.showMessageDialog(null, MASSAGE_ERROR_NOT_FOUND_FILE);
@@ -902,34 +1094,54 @@ public class Main {
         }
 
         public void countLinesForTable() {
-            linesCount = 0;
+            String checkOnEmpty = "";
             try {
-                LineNumberReader lnr = new LineNumberReader(new FileReader("TableOfHours.ini"));
+                FileReader file = new FileReader(FILE_OF_TABLE_HOURS);
+                BufferedReader reader = new BufferedReader(file);
+                checkOnEmpty = reader.readLine();
+                file.close();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, "Данные не определенны "
+                                                                             + NAME_ERROR_TABLE_OF_HOURS);
+            }
+
+            if(checkOnEmpty == null) {
+                try {
+                    FileWriter file = new FileWriter(FILE_OF_TABLE_HOURS);
+                    file.write("\n");
+                    System.out.println(" !@# ");
+                    file.close();
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(null, "Данные не определенны "
+                                                                                 + NAME_ERROR_TABLE_OF_HOURS);
+                }
+            }
+            linesCount = 0;
+
+            try (LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_TABLE_HOURS))) {
+
                 while (null != lnr.readLine()) {
                     linesCount++;
                 }
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Данные количества не определенны");
+                JOptionPane.showMessageDialog(null, "Данные не определенны "
+                                                                             + NAME_ERROR_TABLE_OF_HOURS);
             }
+
         }
 
         public void OutputDataOf_TOH(String nameFile) {
-           // countLinesGeneralForTableOut();
             countLinesForTable();
 
             int counter = 0;
-           // int countLinesForStop = linesCountForNew;
             int ColumnsGoTo = 0;
             int CountRowFromFile = 0;
             int linesGoTo = 0;
             int column = tableHours.getColumnCount();
             int countColumn = column;
 
-
-            try {
-                File e = new File(nameFile);
-                FileReader f = new FileReader(e);
-                BufferedReader reader = new BufferedReader(f);
+            try (FileReader file = new FileReader(nameFile)) {
+                BufferedReader reader = new BufferedReader(file);
                 while (!dateFromFile.equals(" ")) {
                     linesCountForNew--;
 
@@ -979,6 +1191,11 @@ public class Main {
             JPanel panelPfButtons = new JPanel();
             saveTableOfHours = new JButton("Сохранить");
             saveTableOfHours.addActionListener(new SaveTableOfHours());
+
+            if(condition.equals("LimitedMode")) {
+                saveTableOfHours.setVisible(false);
+            }
+
             th_call = new DefaultTableModel();
             ColumnsCellOfTable();
             tableHours = new JTable(th_call);
@@ -998,8 +1215,7 @@ public class Main {
             refreshTableOfHours(wightColumn);
 
             countLinesLocalForObjects();
-            OutputDataOf_TOH("TableOfHours.ini");
-            tableHours.repaint();
+            OutputDataOf_TOH(FILE_OF_TABLE_HOURS);
 
             panelPfButtons.add(saveTableOfHours);
             frame_th.add(BorderLayout.SOUTH, panelPfButtons);
@@ -1012,7 +1228,7 @@ public class Main {
             frame_th.add(BorderLayout.CENTER, pane);
             frame_th.setSize(1280,720);
             frame_th.setVisible(true);
-
+            frame_th.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
             }
         }
 
@@ -1171,6 +1387,9 @@ public class Main {
                 boxNames.setEnabled(false);
                 boxGroups.setEnabled(false);
                 boxSubjects.setEnabled(false);
+                backUpOfData.setEnabled(false);
+                recoveryOfDate.setEnabled(false);
+                authorization.dispose(); // using this method for clear RAM
                 mainFrame.setVisible(true);
                 System.out.println("Current condition [" + condition + "]");
             }
@@ -1201,10 +1420,8 @@ public class Main {
                 passwordUser.setText("");
                 repeatPU.setText("");
 
-                try {
-                    FileWriter saveUserDate = new FileWriter("UserOfDate.ini");
+                try (FileWriter saveUserDate = new FileWriter("UserOfDate.ini")) {
                     saveUserDate.write(passOriginal + "\n");
-                    saveUserDate.close();
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Данные не определенны");
                 }
@@ -1270,7 +1487,7 @@ public class Main {
         }
 
         public void writeDate(String dataObjects) {
-            try ( FileWriter isBegin = new FileWriter(FILE_OF_SUBJECTS, true)) {
+            try (FileWriter isBegin = new FileWriter(FILE_OF_SUBJECTS, true)) {
                 isBegin.write(dataObjects + "\n");
             }
             catch (Exception fileNotFound) {
@@ -1326,10 +1543,8 @@ public class Main {
 
         }
         public void writeDate(String dataSubjects) {
-            try {
-                FileWriter isBegin = new FileWriter(FILE_OF_NAMES, true);
+            try (FileWriter isBegin = new FileWriter(FILE_OF_NAMES, true)) {
                 isBegin.write(dataSubjects + "\n");
-                isBegin.close();
             }
             catch (Exception fileNotFound) {
                 JOptionPane.showMessageDialog(null, MASSAGE_ERROR_NOT_FOUND_FILE +
@@ -1386,10 +1601,8 @@ public class Main {
         }
 
         public void writeDate(String dataSubjects) {
-            try {
-                FileWriter isBegin = new FileWriter(FILE_OF_GROUPS, true);
+            try (FileWriter isBegin = new FileWriter(FILE_OF_GROUPS, true)) {
                 isBegin.write(dataSubjects + "\n");
-                isBegin.close();
             }
             catch (Exception fileNotFound) {
                 JOptionPane.showMessageDialog(null, MASSAGE_ERROR_NOT_FOUND_FILE +
@@ -1397,9 +1610,6 @@ public class Main {
             }
             countLinesLocalForGroups();
         }
-    }
-    public static void copy(String sourcePath, String destinationPath) throws IOException { // method for back up
-        Files.copy(Paths.get(sourcePath), new FileOutputStream(destinationPath));
     }
     static class BuildSchedule extends TableDate implements ActionListener {
         public void actionPerformed(ActionEvent event) {
@@ -1448,10 +1658,184 @@ public class Main {
             TableSchedule.setRowHeight(20);
         }
     }
+    static class BackUpOfDate extends TableDate implements ActionListener {
+        static JFrame frameOfBackUp;
+        public void actionPerformed(ActionEvent event) {
+            frameOfBackUp = new JFrame("Создание резервной копии");
+            frameOfBackUp.setLayout(null);
 
-    static class SaveDataNotes extends TableDate implements ActionListener {
+            JLabel iconDownload = new JLabel(new ImageIcon("src/download.png"));
+            JLabel iconUnload = new JLabel(new ImageIcon("src/unload.png"));
+            JLabel interaction = new JLabel(new ImageIcon("src/interaction.png"));
+
+            JButton uploadDataOfBackUp = new JButton("Выгрузить"); // output from program
+            JButton downloadDataOfBackUp = new JButton("Загрузить"); // input to program
+
+            uploadDataOfBackUp.addActionListener(new Unload());
+            downloadDataOfBackUp.addActionListener(new Download());
+
+            interaction.setBounds(200, 15, 100,100);
+            iconDownload.setBounds(345, 15, 100,100);
+            iconUnload.setBounds(50, 15, 100,100);
+
+            uploadDataOfBackUp.setBounds(50, 120, 100,30);
+            downloadDataOfBackUp.setBounds(345, 120, 100,30);
+
+            progressBar = new JProgressBar();
+            progressBar.setBounds(0, 180, 483,30);
+
+            frameOfBackUp.add(progressBar);
+
+            frameOfBackUp.add(uploadDataOfBackUp);
+            frameOfBackUp.add(interaction);
+            frameOfBackUp.add(downloadDataOfBackUp);
+
+            frameOfBackUp.add(iconDownload);
+            frameOfBackUp.add(iconUnload);
+
+            frameOfBackUp.setSize(500, 250);
+            frameOfBackUp.setResizable(false);
+            frameOfBackUp.setLocationRelativeTo(null);
+            frameOfBackUp.setVisible(true);
+           }
+        }
+
+    static class Unload extends BackUpOfDate implements ActionListener {
+        String FILE_NAME_STORAGE = "Storage.ini";
         public void actionPerformed(ActionEvent event) {
 
+            progressBar.setStringPainted(true);
+            progressBar.setMinimum(0);
+            progressBar.setMaximum(100);
+
+                for(int i = 0; i <= 100; i ++) {
+                    progressBar.setValue(i);
+                }
+                    try {
+                        Unload(FILE_OF_REPOSITORY, FILE_NAME_STORAGE);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(null, "Не удалось завершить операцию! ");
+                        progressBar.setVisible(false);
+                        infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
+                    }
+                    infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
+                    JOptionPane.showMessageDialog(null, "Данные выгружены! ");
+                    frameOfBackUp.dispose();
+                }
+            }
+
+    static class Download extends BackUpOfDate implements ActionListener {
+        String FILE_NAME_STORAGE = "Storage.ini";
+        public void actionPerformed(ActionEvent event) {
+
+            progressBar.setStringPainted(true);
+            progressBar.setMinimum(0);
+            progressBar.setMaximum(100);
+
+            for(int i = 0; i <= 100; i ++) {
+                progressBar.setValue(i);
+            }
+
+                try {
+                    Unload(FILE_NAME_STORAGE, FILE_OF_REPOSITORY);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, "Не удалось завершить операцию! ");
+                    progressBar.setVisible(false);
+                    infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
+                }
+                infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
+                JOptionPane.showMessageDialog(null, "Данные загружены! ");
+
+                frameOfBackUp.dispose();
+        }
+    }
+        public static void Unload(String sourcePath, String destinationPath) throws IOException { // method for back up
+            Files.copy(Paths.get(sourcePath), new FileOutputStream(destinationPath));
+        }
+
+    static class FormOfRecovery extends TableDate implements ActionListener {
+        static JProgressBar progressOfRecovery;
+        static JFrame frameOfRecovery;
+        public void actionPerformed(ActionEvent event) {
+
+            frameOfRecovery = new JFrame("Восстановление");
+            frameOfRecovery.setLayout(null);
+
+            ImageIcon iconCreateNewData = new ImageIcon("src/add_new_data.png");
+            JLabel labelOfIcon = new JLabel(iconCreateNewData);
+
+            JButton confirmation = new JButton("Да");
+            JButton renouncement = new JButton("Нет");
+
+            confirmation.addActionListener(new RecoveryOfData());
+            renouncement.addActionListener(new CancelOperation());
+
+            JLabel infoCreateNewData = new JLabel(INFO_RECOVERY);
+
+            labelOfIcon.setBounds(10,10, 100,100);
+            infoCreateNewData.setBounds(130,10,300,130);
+
+            confirmation.setBounds(130,150,100,30);
+            renouncement.setBounds(250,150,100,30);
+
+            progressOfRecovery = new JProgressBar();
+            progressOfRecovery.setBounds(0, 232, 483, 30);
+
+            frameOfRecovery.add(progressOfRecovery);
+            frameOfRecovery.add(labelOfIcon);
+            frameOfRecovery.add(confirmation);
+            frameOfRecovery.add(renouncement);
+            frameOfRecovery.add(infoCreateNewData);
+
+            frameOfRecovery.setSize(500, 300);
+            frameOfRecovery.setResizable(false);
+            frameOfRecovery.setLocationRelativeTo(null);
+            frameOfRecovery.setVisible(true);
+
+        }
+    }
+    static class CancelOperation extends FormOfRecovery implements ActionListener {
+        public void actionPerformed(ActionEvent event) {
+            JOptionPane.showMessageDialog(null, "Операция отменена!");
+            infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
+            frameOfRecovery.dispose();
+            }
+        }
+    static class RecoveryOfData extends FormOfRecovery implements ActionListener {
+        public void actionPerformed(ActionEvent event) {
+
+            String[] listFiles = {"Repository.ini",
+                                  "DoneSchedule.ini",
+                                  "NamesList.ini",
+                                  "GroupsList.ini",
+                                  "SubjectsList.ini",
+                                  "Check.ini",
+                                  "TableOfHours.ini",
+                                  "DataNotes.ini"};
+
+            progressOfRecovery.setStringPainted(true);
+            progressOfRecovery.setMinimum(0);
+            progressOfRecovery.setMaximum(100);
+
+            for(int i = 0; i <= 100; i ++) {
+                progressOfRecovery.setValue(i);
+            }
+
+            for (String createFiles : listFiles) {
+                try (FileWriter createFile = new FileWriter(createFiles)) {
+                    createFile.write("");
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, "Операция не может быть завершена");
+                    infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
+                }
+            }
+            JOptionPane.showMessageDialog(null, "Восстановление завершено!");
+            infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
+            frameOfRecovery.dispose();
+              }
+        }
+    static class SaveDataNotes extends TableDate implements ActionListener {
+        public void actionPerformed(ActionEvent event) {
             dataNotes = notes.getText();
 
             try {
@@ -1471,11 +1855,9 @@ public class Main {
     static class SaveForReturn extends TableDate implements ActionListener {
         public void actionPerformed(ActionEvent event) {
             String checkForAvailability = "";
-            try {
-                FileReader read = new FileReader("Check.ini");
+            try (FileReader read = new FileReader("Check.ini")) {
                 BufferedReader buffer =  new BufferedReader(read);
                 checkForAvailability = buffer.readLine();
-                read.close();
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(null, "Данные не могут быть записаны");
             }
@@ -1501,10 +1883,8 @@ public class Main {
             }
 
             String date = "data of file is`n empty";
-            try {
-                FileWriter write = new FileWriter("Check.txt");
+            try (FileWriter write = new FileWriter(FILE_CHECK_SAVE_DATE)) {
                 write.write(date);
-                write.close();
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(null, "Данные не могут быть записаны");
                 infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
@@ -1541,13 +1921,17 @@ public class Main {
     }
     static class SortDate extends TableDate implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            condition = "TurnOnSort";
+            if(!condition.equals("LimitedMode")) {
+                condition = "TurnOnSort";
+            }
             viewSchedule();
         }
     }
     static class ViewSaveSchedule extends TableDate implements ActionListener {
         public void actionPerformed(ActionEvent event) {
-            condition = "TurnOffSort";
+            if(!condition.equals("LimitedMode")) {
+                condition = "TurnOffSort";
+            }
             viewSchedule();
         }
     }
