@@ -1,3 +1,5 @@
+package tkmp.schedule;
+
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -7,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.GregorianCalendar;
@@ -26,12 +29,13 @@ public class Main {
     static int realYear, realMonth, realDay, currentYear, currentMonth;
 
     public static void main(String[] args) {
-       try {
+        System.setProperty("file.encoding", "UTF-8");
+        try {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                    if ("Nimbus".equals(info.getName())) {
-                        UIManager.setLookAndFeel(info.getClassName());
-                        break;
-                    }
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
             }
         } catch (Exception e) {
             // If Nimbus is not available, you can set the GUI to another look and feel.
@@ -46,22 +50,23 @@ public class Main {
     }
 
 
-
     static class TableDate extends JFrame implements ActionListener {
 
-        final static String FILE_OF_TABLE_BS = "DoneSchedule.ini",
-                            FILE_CHECK_SAVE_DATE = "Check.ini",
-                            FILE_OF_NAMES = "NamesList.ini",
-                            FILE_OF_GROUPS = "GroupsList.ini",
-                            FILE_OF_SUBJECTS = "SubjectsList.ini",
-                            FILE_OF_REPOSITORY = "Repository.ini",
-                            FILE_OF_TABLE_HOURS = "TableOfHours.ini",
-                            FILE_OF_USER_DATE = "UserOfDate.ini";
+        private static final String ENCODING_UTF8 = "UTF-8";
+
+        final static String FILE_OF_TABLE_BS = "DoneSchedule.txt",
+                FILE_CHECK_SAVE_DATE = "Check.txt",
+                FILE_OF_NAMES = "NamesList.txt",
+                FILE_OF_GROUPS = "GroupsList.txt",
+                FILE_OF_SUBJECTS = "SubjectsList.txt",
+                FILE_OF_REPOSITORY = "Repository.txt",
+                FILE_OF_TABLE_HOURS = "TableOfHours.txt",
+                FILE_OF_USER_DATE = "UserOfDate.txt";
 
         static JTable TableSchedule,
-                      tableHours;
+                tableHours;
         static JPanel lowPanel,
-                      commonPanel;
+                commonPanel;
         JFrame frameOfTable;
 
         static JFrame mainFrame;
@@ -70,47 +75,47 @@ public class Main {
         static JTextArea notes;
 
         static JButton openFormSubjects,
-                       openFormNames,
-                       openFormGroups,
-                       viewSavedSchedule,
-                       addDateToFile,
-                       createSchedule,
-                       beginBuild,
-                       deleteDateFromFiles,
-                       sortOnClick,
-                       signIn,
-                       signUpAccount,
-                       signUp,
-                       saveDataNotes,
-                       printSavedTable,
-                       openCellOfTable,
-                       saveTableOfHours,
-                       backUpOfData,
-                       recoveryOfDate;
+                openFormNames,
+                openFormGroups,
+                viewSavedSchedule,
+                addDateToFile,
+                createSchedule,
+                beginBuild,
+                deleteDateFromFiles,
+                sortOnClick,
+                signIn,
+                signUpAccount,
+                signUp,
+                saveDataNotes,
+                printSavedTable,
+                openCellOfTable,
+                saveTableOfHours,
+                backUpOfData,
+                recoveryOfDate;
 
         static JLabel infoAboutOperation,
-                      infoEnter,
-                      infoRepeat,
-                      rule,
-                      imageBack,
-                      icon,
-                      infoSI_SU,
-                      infoAboutEvent;
+                infoEnter,
+                infoRepeat,
+                rule,
+                imageBack,
+                icon,
+                infoSI_SU,
+                infoAboutEvent;
 
         JScrollPane pane;
         JTextField isText,
-                   textForGroups,
-                   textForNames,
-                   textForSubjects;
+                textForGroups,
+                textForNames,
+                textForSubjects;
         static JTextField rules;
 
         static String DataForTable = "",
-                      stringWrite = "",
-                      stringWriteSort = "",
-                      dataNotes = "",
-                      checkSignIn = "",
-                      condition,
-                      dateFromFile = "";
+                stringWrite = "",
+                stringWriteSort = "",
+                dataNotes = "",
+                checkSignIn = "",
+                condition,
+                dateFromFile = "";
 
         String[] listForNames;
         String[] listForGroups;
@@ -118,45 +123,45 @@ public class Main {
         String line = "";
 
         int linesCount = 0,
-            linesCountForNew = 0,
-            lineCountForNames = 0,
-            linesCountsForGroups = 0,
-            linesCountsForSubjects = 0;
+                linesCountForNew = 0,
+                lineCountForNames = 0,
+                linesCountsForGroups = 0,
+                linesCountsForSubjects = 0;
 
         static JComboBox<String> boxNames,
-                                 boxGroups,
-                                 boxSubjects,
-                                 sortBoxNames,
-                                 sortBoxGroups;
+                boxGroups,
+                boxSubjects,
+                sortBoxNames,
+                sortBoxGroups;
 
         final String MASSAGE_ERROR_NOT_FOUND_FILE = "Отсутствует файл",
-                     NAME_ERROR_SUBJECTS = "Дисциплины",
-                     NAME_ERROR_GROUPS = "Группы",
-                     NAME_ERROR_NAMES = "Имена",
-                     NAME_ERROR_NOTES= "Заметки",
-                     NAME_ERROR_TABLE = "Таблица составления расписания",
-                     NAME_ERROR_TABLE_OF_SAVE = "Таблица сохранения расписания",
-                     NAME_ERROR_TABLE_OF_HOURS = "Таблица часов",
-                     INFO_ABOUT_WORK = "Предварительно необходимо " +
-                                       "выбрать параметр для сортировки",
-                    ATTENTION_NOT_SELECTED_TABLE = "Предварительно необходимо " +
-                                              "открыть таличную часть для " +
-                                              "дальнейшей печати!",
-                     INFO_RECOVERY = "<html> Вы действительно хотите восстановить в исходное состояние? " +
-                                     "<br/>" +
-                                     "Данная процедура создаст новые базы данных для дальнейшей работы " +
-                                     "без сохранения данных предыдущих баз (если они имеются)" +
-                                     "<br/>" +
-                                     "Это операция необходима при возникновении проблем с" +
-                                     " отсутствием чтения данных </html> ",
+                NAME_ERROR_SUBJECTS = "Дисциплины",
+                NAME_ERROR_GROUPS = "Группы",
+                NAME_ERROR_NAMES = "Names",
+                NAME_ERROR_NOTES= "Заметки",
+                NAME_ERROR_TABLE = "Таблица составления расписания",
+                NAME_ERROR_TABLE_OF_SAVE = "Таблица сохранения расписания",
+                NAME_ERROR_TABLE_OF_HOURS = "Таблица часов",
+                INFO_ABOUT_WORK = "Предварительно необходимо " +
+                        "выбрать параметр для сортировки",
+                ATTENTION_NOT_SELECTED_TABLE = "Предварительно необходимо " +
+                        "открыть таличную часть для " +
+                        "дальнейшей печати!",
+                INFO_RECOVERY = "<html> Вы действительно хотите восстановить в исходное состояние? " +
+                        "<br/>" +
+                        "Данная процедура создаст новые базы данных для дальнейшей работы " +
+                        "без сохранения данных предыдущих баз (если они имеются)" +
+                        "<br/>" +
+                        "Это операция необходима при возникновении проблем с" +
+                        " отсутствием чтения данных </html> ",
 
-                      INFO_ABOUT_SU = "<html> Для продолжения создайте <br/> " +
-                                      "новую учетную запись! </html>",
-                      INFO_ABOUT_SI = "Войдите как администратор или продолжите";
+        INFO_ABOUT_SU = "<html> Для продолжения создайте <br/> " +
+                "новую учетную запись! </html>",
+                INFO_ABOUT_SI = "Войдите как администратор или продолжите";
 
         static JPasswordField passwordUser,
-                              repeatPU,
-                              passwordUserCheck;
+                repeatPU,
+                passwordUserCheck;
 
 
 
@@ -173,10 +178,6 @@ public class Main {
         Object saveTable = "";
 
         static JProgressBar progressBar;
-
-        public void getDateFromFile(String str) {
-            dateFromFile = str;
-        }
 
         public void showPanelCreateAccount() {
             imageBack.setIcon(new ImageIcon("src/bg_dark.jpg"));
@@ -236,7 +237,7 @@ public class Main {
             imageBack = new JLabel(new ImageIcon("src/bg.jpg")); // or IMG.
 
             infoAboutOperation = new JLabel("<html> Создайте пароль для " +
-                                                 "дальнейшей аутентификации </html> ");
+                    "дальнейшей аутентификации </html> ");
 
             infoEnter = new JLabel("Введите пароль");
             infoRepeat = new JLabel("Повторите пароль");
@@ -331,6 +332,7 @@ public class Main {
 
 
         public void mainFrame() {
+
             container = new Container();
             container.setLayout(null);
 
@@ -379,7 +381,7 @@ public class Main {
                 mtblCalendar.addColumn(headers[i]);
             }
 
-            tblCalendar.getParent().setBackground(tblCalendar.getBackground()); //Set background
+            tblCalendar.getParent().setBackground(tblCalendar.getBackground());
 
             tblCalendar.getTableHeader().setResizingAllowed(false);
             tblCalendar.getTableHeader().setReorderingAllowed(false);
@@ -401,7 +403,7 @@ public class Main {
             refreshCalendar (realMonth, realYear);
 
             notes = new JTextArea(5,50);
-            try (FileReader fr = new FileReader("DataNotes.ini")) {
+            try (FileReader fr = new FileReader("DataNotes.txt")) {
                 BufferedReader reader = new BufferedReader(fr);
                 while (dataNotes != null) {
                     dataNotes = reader.readLine();
@@ -410,7 +412,7 @@ public class Main {
                 reader.close();
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null, "Данные не определенны "
-                                                                             + NAME_ERROR_NOTES);
+                        + NAME_ERROR_NOTES);
             }
 
             infoAboutEvent = new JLabel();
@@ -489,15 +491,15 @@ public class Main {
 
             openFormSubjects.setBounds(10, 20, 32,32);
             openFormSubjects.setToolTipText("<html> Открыть форму для заполнения " +
-                                            "<br/> данными о дисциплинах </html>");
+                    "<br/> данными о дисциплинах </html>");
 
             openFormNames.setBounds(10, 80, 32,32);
             openFormNames.setToolTipText("<html> Открыть форму для заполнения " +
-                                         "<br/> данными о преподавателях </html>");
+                    "<br/> данными о преподавателях </html>");
 
             openFormGroups.setBounds(10, 140, 32,32);
             openFormGroups.setToolTipText("<html> Открыть форму для заполнения " +
-                                          "<br/> данными о группах </html>");
+                    "<br/> данными о группах </html>");
 
             printSavedTable.setBounds(10, 200, 32,32);
             printSavedTable.setToolTipText("<html> Создать печатную форму </html>");
@@ -551,7 +553,7 @@ public class Main {
 
 
             JScrollPane scrollGeneralList = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                                                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
             scrollGeneralList.getViewport().setBackground(Color.WHITE);
             scrollGeneralList.getViewport().add(generalLst);
@@ -604,17 +606,17 @@ public class Main {
         public static void refreshCalendar(int month, int year){
 
             String[] months =  {"Январь",
-                                "Февраль",
-                                "Март",
-                                "Апрель",
-                                "Май",
-                                "Июнь",
-                                "Июль",
-                                "Август",
-                                "Сентябрь",
-                                "Октябрь",
-                                "Ноябрь",
-                                "Декабрь"};
+                    "Февраль",
+                    "Март",
+                    "Апрель",
+                    "Май",
+                    "Июнь",
+                    "Июль",
+                    "Август",
+                    "Сентябрь",
+                    "Октябрь",
+                    "Ноябрь",
+                    "Декабрь"};
             int nod, som;
 
             btnPrev.setEnabled(true);
@@ -734,18 +736,20 @@ public class Main {
             callBoxDataOfTable();
             OutputDateForNew(FILE_OF_REPOSITORY);
             TableSchedule.getColumnModel().getColumn(0).setPreferredWidth(90);
-            TableSchedule.setRowHeight(20);
+            TableSchedule.setRowHeight(40);
         }
 
         public void countLinesGeneralForTable() {
+
             linesCount = 0;
+
             try (LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_TABLE_BS))) {
                 while (null != lnr.readLine()) {
                     linesCount++;
                 }
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null, "Данные не определенны "
-                                                                             + NAME_ERROR_TABLE);
+                        + NAME_ERROR_TABLE);
             }
         }
 
@@ -757,29 +761,7 @@ public class Main {
                 }
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null, "Данные не определенны "
-                                                                             + NAME_ERROR_TABLE_OF_SAVE);
-            }
-        }
-
-        public void countLinesLocalForName() {
-            try (LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_NAMES))) {
-                while (null != lnr.readLine()) {
-                    lineCountForNames++;
-                }
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(null, "Данные не определенны "
-                                                                             + NAME_ERROR_NAMES);
-            }
-            listForNames = new String[lineCountForNames];
-            try (FileReader fr = new FileReader(FILE_OF_NAMES)) {
-                BufferedReader reader = new BufferedReader(fr);
-                while ((line = reader.readLine()) != null) {
-                    lineCountForNames--;
-                    listForNames[lineCountForNames] = line;
-                }
-                reader.close();
-            } catch (IOException ex) {
-
+                        + NAME_ERROR_TABLE_OF_SAVE);
             }
         }
 
@@ -791,12 +773,14 @@ public class Main {
                 }
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null, "Данные не определенны "
-                                                                             + NAME_ERROR_GROUPS);
+                        + NAME_ERROR_GROUPS);
             }
             listForGroups = new String[linesCountsForGroups];
 
-            try ( FileReader fr = new FileReader(FILE_OF_GROUPS)) {
-                BufferedReader reader = new BufferedReader(fr);
+            try  {
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(
+                                new FileInputStream(FILE_OF_GROUPS), Charset.forName(ENCODING_UTF8)));;
                 while ((line = reader.readLine()) != null) {
                     linesCountsForGroups--;
                     listForGroups[linesCountsForGroups] = line;
@@ -809,6 +793,7 @@ public class Main {
         }
 
         public void countLinesLocalForObjects() {
+
             try (LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_SUBJECTS))) {
                 while (null != lnr.readLine()) {
                     linesCountsForSubjects++;
@@ -819,18 +804,47 @@ public class Main {
             }
 
             listForSubjects = new String[linesCountsForSubjects];
-            try (FileReader fr = new FileReader(FILE_OF_SUBJECTS)) {
-                BufferedReader reader = new BufferedReader(fr);
+          try {
+              BufferedReader reader = new BufferedReader(
+                      new InputStreamReader(
+                              new FileInputStream(FILE_OF_SUBJECTS), Charset.forName(ENCODING_UTF8)));
+              while ((line = reader.readLine()) != null) {
+                  linesCountsForSubjects--;
+                  listForSubjects[linesCountsForSubjects] = line;
+              }
+              reader.close();
+             } catch (Exception ex) {
+
+             }
+
+        }
+
+        public void countLinesLocalForName() {
+
+            try (LineNumberReader lnr = new LineNumberReader(new FileReader("NamesList.txt"))) {
+                while (null != lnr.readLine()) {
+                    lineCountForNames++;
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Данные не определенны "
+                        + NAME_ERROR_NAMES);
+            }
+            listForNames = new String[lineCountForNames];
+
+
+            try {
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(
+                                new FileInputStream(FILE_OF_NAMES), Charset.forName(ENCODING_UTF8)));
                 while ((line = reader.readLine()) != null) {
-                    linesCountsForSubjects--;
-                    listForSubjects[linesCountsForSubjects] = line;
+                    lineCountForNames--;
+                    listForNames[lineCountForNames] = line;
                 }
                 reader.close();
             } catch (IOException ex) {
 
             }
         }
-
 
         public void OutputDate(String nameFile) {
             countLinesGeneralForTable();
@@ -839,8 +853,7 @@ public class Main {
                                                 "10:45 - 12:15",
                                                 "12:45 - 14:15",
                                                 "14:30 - 16:00"};
-            nameFile = FILE_OF_TABLE_BS;
-            String dataForWrite = "";
+
             int counter = 0;
             int countLinesForStop = linesCount;
             int ColumnsGoTo = 0;
@@ -849,15 +862,16 @@ public class Main {
             int column = TableSchedule.getColumnCount();
             int countColumn = column;
             int countLessons = 0;
+            int row = TableSchedule.getRowCount();
+            try {
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(
+                                new FileInputStream(FILE_OF_TABLE_BS), Charset.forName(ENCODING_UTF8)));
 
-            try ( FileReader f = new FileReader(nameFile)) {
-                BufferedReader reader = new BufferedReader(f);
                 while (!dateFromFile.equals(" ")) {
-                    //timeLessons++;
                     linesCount--;
-                    getDateFromFile(dataForWrite);
                     try (Stream<String> lines = Files.lines(Paths.get(nameFile))) {
-                        dataForWrite = lines.skip(linesGoTo).findFirst().get(); // back method through '-'
+                        dateFromFile = lines.skip(linesGoTo).findFirst().get(); // back method through '-'
                         linesGoTo++;
                         counter++;
                         ColumnsGoTo++;
@@ -871,30 +885,35 @@ public class Main {
                         countLessons = 0;
                     }
 
-                    model.addRow(new Object[]{timeLessons[countLessons], dataForWrite, "", "", "", ""});
-                    TableSchedule.setValueAt(dataForWrite, (counter - counter) + CountRowFromFile, counter);
+                    if(CountRowFromFile == 0) {
+                        model.addRow(new Object[]{timeLessons[countLessons], ""});
+                        TableSchedule.setValueAt("", (counter - counter) + CountRowFromFile, counter);
+                    } else {
+                       // linesGoTo++;
+                        model.addRow(new Object[]{timeLessons[countLessons], dateFromFile});
+                        TableSchedule.setValueAt(dateFromFile, (counter - counter) + CountRowFromFile, counter);
+                    }
+                    System.out.print(CountRowFromFile + " ++");
                     countLessons++;
-
                 }
                 reader.close();
             } catch (Exception fileNotFound) {
                 // JOptionPane.showMessageDialog(null, "No provide"); // Will be exception by reason of "while" above.
             }
-            int valueOfDeleteRow = CountRowFromFile + 1;
+          int valueOfDeleteRow = CountRowFromFile + 1;
             while (valueOfDeleteRow <= (countLinesForStop - 1)) {
                 valueOfDeleteRow++;
                 model.removeRow(CountRowFromFile + 1);
             }
-
         }
 
         public void OutputDateForNew(String nameFile) {
             countLinesGeneralForTableOut();
             String[] timeLessons = new String[]{"08:20 - 08:50",
-                                                "09:00 - 10:30",
-                                                "10:45 - 12:15",
-                                                "12:45 - 14:15",
-                                                "14:30 - 16:00"};
+                    "09:00 - 10:30",
+                    "10:45 - 12:15",
+                    "12:45 - 14:15",
+                    "14:30 - 16:00"};
 
             int counter = 0;
             int countLinesForStop = linesCountForNew;
@@ -911,9 +930,9 @@ public class Main {
             }
 
             try {
-                File e = new File(nameFile);
-                FileReader f = new FileReader(e);
-                BufferedReader reader = new BufferedReader(f);
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(
+                                new FileInputStream(FILE_OF_REPOSITORY), Charset.forName(ENCODING_UTF8)));
 
                 while (!dateFromFile.equals(" ")) {
                     linesCountForNew--;
@@ -938,56 +957,53 @@ public class Main {
                     TableSchedule.setValueAt(dateFromFile, (counter - counter) + CountRowFromFile, counter);
                     countLessons++;
 
-                        if (condition.equals("TurnOnSort")) {
+                    if (condition.equals("TurnOnSort")) {
 
-                            if (!stringWriteSort.isEmpty()) {
+                        if (!stringWriteSort.isEmpty()) {
 
-                                 Object valueOf = TableSchedule.getValueAt((counter - counter) + CountRowFromFile, counter);
-                                 String toStringOfValue = valueOf.toString();
+                            Object valueOf = TableSchedule.getValueAt((counter - counter) + CountRowFromFile, counter);
+                            String toStringOfValue = valueOf.toString();
 
-                                StringTokenizer skipObjectValue = new StringTokenizer(toStringOfValue);
-                                String firstArgOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
-                                String secondArgOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
-                                String emptyValueOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : ""; // never use, need for work of "thirdValue"
-                                String thirdValueOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
-
-
-                                StringTokenizer skipStringBoxes = new StringTokenizer(stringWriteSort);
-                                String firstArg = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
-                                String secondArg = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
-                                String emptyValue = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : ""; // never use, need for work of "thirdValue"
-                                String thirdValue = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
+                            StringTokenizer skipObjectValue = new StringTokenizer(toStringOfValue);
+                            String firstArgOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
+                            String secondArgOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
+                            String emptyValueOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : ""; // never use, need for work of "thirdValue"
+                            String thirdValueOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
 
 
-                                    if (firstArgOfObject.equals(firstArg) || thirdValueOfObject.equals(thirdValue)) {
-                                        TableSchedule.setValueAt(toStringOfValue, (counter - counter) + CountRowFromFile, counter);
+                            StringTokenizer skipStringBoxes = new StringTokenizer(stringWriteSort);
+                            String firstArg = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
+                            String secondArg = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
+                            String emptyValue = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : ""; // never use, need for work of "thirdValue"
+                            String thirdValue = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
 
-                                     }
 
-                                else {
-                                    TableSchedule.setValueAt("", (counter - counter) + CountRowFromFile, counter);
-                             }
+                            if (firstArgOfObject.equals(firstArg) || thirdValueOfObject.equals(thirdValue)) {
+                                TableSchedule.setValueAt(toStringOfValue, (counter - counter) + CountRowFromFile, counter);
+
+                            }
+
+                            else {
+                                TableSchedule.setValueAt("", (counter - counter) + CountRowFromFile, counter);
+                            }
+                        }
                     }
                 }
-             }
                 reader.close();
 
-                } catch(Exception fileNotFound){
-                    // JOptionPane.showMessageDialog(null, "No provide"); // Might be exception by reason of "while" above.
-                }
-                int valueOfDeleteRow = CountRowFromFile + 1;
-                while (valueOfDeleteRow <= (countLinesForStop - 1)) {
-                    valueOfDeleteRow++;
-                    newModelForStorage.removeRow(CountRowFromFile + 1);
-                }
+            } catch(Exception fileNotFound){
+                // JOptionPane.showMessageDialog(null, "No provide"); // Might be exception by reason of "while" above.
+            }
+            int valueOfDeleteRow = CountRowFromFile + 1;
+            while (valueOfDeleteRow <= (countLinesForStop - 1)) {
+                valueOfDeleteRow++;
+                newModelForStorage.removeRow(CountRowFromFile + 1);
+            }
 
         }
 
         public void refreshTable() {
             JTableHeader th = TableSchedule.getTableHeader();
-
-            TableSchedule.setRowHeight(12);
-
             for (int i = 0; i < TableSchedule.getColumnCount(); i++) {
                 TableColumn column = TableSchedule.getColumnModel().getColumn(i);
                 int prefWidth = Math.round((float) th.getFontMetrics(th.getFont())
@@ -1017,7 +1033,7 @@ public class Main {
         }
 
 
-        public void ColumnsCellOfTable() { // experiment ha-ha-ha
+        public void ColumnsCellOfTable() {
             countLinesLocalForGroups();
             int lengthOfList = listForGroups.length;
             for(String counter : listForGroups) {
@@ -1055,12 +1071,12 @@ public class Main {
 
         public void showDateForNew() {
             String[] daysOfWeek = {"Пары",
-                                   "Понедельник",
-                                   "Вторник",
-                                   "Среда",
-                                   "Четверг",
-                                   "Пятница",
-                                   "Суббота"};
+                    "Понедельник",
+                    "Вторник",
+                    "Среда",
+                    "Четверг",
+                    "Пятница",
+                    "Суббота"};
 
             for(String counter : daysOfWeek) {
                 newModelForStorage.addColumn(counter);
@@ -1083,13 +1099,16 @@ public class Main {
             String textGroups = (String)boxGroups.getSelectedItem();
             String textObjects = (String)boxSubjects.getSelectedItem();
             String textNames = (String)boxNames.getSelectedItem();
+
             stringWrite = textGroups + " " + textObjects + " " + textNames;
             System.out.println(stringWrite + " ");
+
+
 
             String sortTextGroups = (String)sortBoxGroups.getSelectedItem();
             String sortTextNames = (String)sortBoxNames.getSelectedItem();
 
-            stringWriteSort = sortTextGroups + " " + " " + sortTextNames;
+            stringWriteSort = sortTextGroups + " " + textObjects + " " + sortTextNames;
             System.out.println(stringWriteSort + " ");
         }
 
@@ -1102,7 +1121,7 @@ public class Main {
                 file.close();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Данные не определенны "
-                                                                             + NAME_ERROR_TABLE_OF_HOURS);
+                        + NAME_ERROR_TABLE_OF_HOURS);
             }
 
             if(checkOnEmpty == null) {
@@ -1113,7 +1132,7 @@ public class Main {
                     file.close();
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(null, "Данные не определенны "
-                                                                                 + NAME_ERROR_TABLE_OF_HOURS);
+                            + NAME_ERROR_TABLE_OF_HOURS);
                 }
             }
             linesCount = 0;
@@ -1125,7 +1144,7 @@ public class Main {
                 }
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null, "Данные не определенны "
-                                                                             + NAME_ERROR_TABLE_OF_HOURS);
+                        + NAME_ERROR_TABLE_OF_HOURS);
             }
 
         }
@@ -1158,12 +1177,12 @@ public class Main {
                         counter = 1;
                     }
 
-                   for(String counters : listForSubjects) {
-                       th_call.addRow(new Object[]{counters});
-                   }
-                    th_call.addRow(new Object[]{dateFromFile});
+                    for(String counters : listForSubjects) {
+                        th_call.addRow(new Object[]{counters});
+                    }
+                    //th_call.addRow(new Object[]{dateFromFile});
 
-                   tableHours.setValueAt(dateFromFile, (counter - counter) + CountRowFromFile, counter);
+                    tableHours.setValueAt(dateFromFile, (counter - counter) + CountRowFromFile, counter);
                 }
                 reader.close();
 
@@ -1171,6 +1190,7 @@ public class Main {
                 // JOptionPane.showMessageDialog(null, "No provide"); // Might be exception by reason of "while" above.
             }
             countLinesLocalForObjects();
+
             int countRows = tableHours.getRowCount();
             countRows--;
 
@@ -1211,7 +1231,7 @@ public class Main {
                     tableHours.getColumnModel().getColumn(x).setPreferredWidth(wightColumn);
                 }
             }
-            tableHours.setRowHeight(20);
+            tableHours.setRowHeight(40);
             refreshTableOfHours(wightColumn);
 
             countLinesLocalForObjects();
@@ -1229,8 +1249,8 @@ public class Main {
             frame_th.setSize(1280,720);
             frame_th.setVisible(true);
             frame_th.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-            }
         }
+    }
 
     static public class SaveTableOfHours extends TableDate implements ActionListener {
         public void actionPerformed(ActionEvent e) {
@@ -1245,7 +1265,7 @@ public class Main {
                     saveTable = tableHours.getValueAt(x, y);
                     System.out.print("[ " + saveTable + "] ");
                     try {
-                        FileWriter write = new FileWriter("TableOfHours.ini", true);
+                        FileWriter write = new FileWriter("TableOfHours.txt", true);
                         write.write(saveTable + "\n");
                         write.close();
                         infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
@@ -1260,7 +1280,7 @@ public class Main {
 
         private void clearContentForSave() {
             try {
-                FileWriter write = new FileWriter("TableOfHours.ini"); // create var
+                FileWriter write = new FileWriter("TableOfHours.txt"); // create var
                 write.write("");
                 write.close();
                 infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
@@ -1282,8 +1302,8 @@ public class Main {
             String savedTable = "Сохраненная таблица расписания";
 
             String[] tablesOfData = new String[] {"- Выберите таблицу для печати -",
-                                                  tableOfHours,
-                                                  savedTable};
+                    tableOfHours,
+                    savedTable};
 
             JComboBox<String> tables = new JComboBox<>(tablesOfData);
 
@@ -1345,8 +1365,12 @@ public class Main {
 
             System.out.print("adding line is --> [" + stringWrite + "]\n");
 
-            try (FileWriter write = new FileWriter(FILE_OF_TABLE_BS, true)) {
-                write.write(stringWrite + "\n");
+
+            try  {
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(FILE_OF_TABLE_BS, true), "UTF8"));
+                bw.write(stringWrite + "\n");
+                bw.flush();
             }
             catch (IOException e) {
                 JOptionPane.showMessageDialog(null, "Запись не может быть завершена");
@@ -1420,7 +1444,7 @@ public class Main {
                 passwordUser.setText("");
                 repeatPU.setText("");
 
-                try (FileWriter saveUserDate = new FileWriter("UserOfDate.ini")) {
+                try (FileWriter saveUserDate = new FileWriter("UserOfDate.txt")) {
                     saveUserDate.write(passOriginal + "\n");
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Данные не определенны");
@@ -1452,7 +1476,7 @@ public class Main {
         static JLabel placeForConfirmation;
 
         public void actionPerformed(ActionEvent event) {
-            labelInfoFrame = new JLabel("Запишити дисциплину для сохранения");
+            labelInfoFrame = new JLabel("Запишите дисциплину для сохранения");
             addDate = new JButton("Сохранить");
 
             placeForConfirmation = new JLabel(new ImageIcon("src/confirmation.png"));
@@ -1463,7 +1487,7 @@ public class Main {
             panelOfComponents = new JPanel();
             panelOfComponents.setLayout(null);
             labelInfoFrame.setBounds(30, 15, 240, 25);
-            textForSubjects.setBounds(30, 50, 240, 27);
+            textForSubjects.setBounds(30, 50, 240, 28);
 
             placeForConfirmation.setBounds(270, 20, 100, 50);
             addDate.setBounds(130, 80, 140, 27);
@@ -1487,12 +1511,16 @@ public class Main {
         }
 
         public void writeDate(String dataObjects) {
-            try (FileWriter isBegin = new FileWriter(FILE_OF_SUBJECTS, true)) {
-                isBegin.write(dataObjects + "\n");
-            }
-            catch (Exception fileNotFound) {
+
+            try {
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(FILE_OF_SUBJECTS, true), "UTF8"));
+                bw.write(dataObjects + "\n");
+                bw.flush();
+
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, MASSAGE_ERROR_NOT_FOUND_FILE +
-                                                                       " " + NAME_ERROR_SUBJECTS);
+                                                                             " " + NAME_ERROR_SUBJECTS);
             }
             countLinesLocalForObjects();
         }
@@ -1509,7 +1537,7 @@ public class Main {
         static JLabel placeForConfirmation;
 
         public void actionPerformed(ActionEvent event) {
-            labelInfo = new JLabel("Запишити имя для сохранения");
+            labelInfo = new JLabel("Запишите имя для сохранения");
             addDate = new JButton("Сохранить");
             textForNames = new JTextField();
 
@@ -1521,8 +1549,8 @@ public class Main {
             labelInfo.setFont(new Font("Tahoma", Font.PLAIN, 13));
 
             labelInfo.setBounds(20, 20, 225, 20);
-            textForNames.setBounds(20, 50, 225, 27);
-            placeForConfirmation.setBounds(250, 20, 100, 50);
+            textForNames.setBounds(20, 50, 225, 28);
+            placeForConfirmation.setBounds(270, 20, 100, 50);
             addDate.setBounds(120, 80, 125, 27);
 
             panelOfComponents.add(textForNames);
@@ -1542,13 +1570,16 @@ public class Main {
             frameForNames.setResizable(false);
 
         }
-        public void writeDate(String dataSubjects) {
-            try (FileWriter isBegin = new FileWriter(FILE_OF_NAMES, true)) {
-                isBegin.write(dataSubjects + "\n");
+        public void writeDate(String dataNames) {
+          try  {
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(FILE_OF_NAMES, true), "UTF8"));
+                bw.write(dataNames + "\n");
+                bw.flush();
             }
             catch (Exception fileNotFound) {
                 JOptionPane.showMessageDialog(null, MASSAGE_ERROR_NOT_FOUND_FILE +
-                                                                       " " + NAME_ERROR_NAMES);
+                        " " + NAME_ERROR_NAMES);
             }
             countLinesLocalForName();
         }
@@ -1566,7 +1597,7 @@ public class Main {
 
         public void actionPerformed(ActionEvent event) {
 
-            labelInfo = new JLabel("Запишити группу для сохранения");
+            labelInfo = new JLabel("Запишите группу для сохранения");
 
             addDate = new JButton("Сохранить");
 
@@ -1583,8 +1614,8 @@ public class Main {
             panelOfComponents.add(addDate);
 
             labelInfo.setBounds(20, 20, 225, 20);
-            textForGroups.setBounds(20, 50, 225, 27);
-            placeForConfirmation.setBounds(250, 20, 100, 50);
+            textForGroups.setBounds(20, 50, 225, 28);
+            placeForConfirmation.setBounds(270, 20, 100, 50);
             addDate.setBounds(120, 80, 125, 27);
 
 
@@ -1600,13 +1631,16 @@ public class Main {
             addDate.addActionListener(new SaveGroups());
         }
 
-        public void writeDate(String dataSubjects) {
-            try (FileWriter isBegin = new FileWriter(FILE_OF_GROUPS, true)) {
-                isBegin.write(dataSubjects + "\n");
+        public void writeDate(String dataGroups) {
+            try {
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(FILE_OF_GROUPS, true), "UTF8"));
+                bw.write(dataGroups + "\n");
+                bw.flush();
             }
             catch (Exception fileNotFound) {
                 JOptionPane.showMessageDialog(null, MASSAGE_ERROR_NOT_FOUND_FILE +
-                                                                       " " + NAME_ERROR_GROUPS);
+                                                                             " " + NAME_ERROR_GROUPS);
             }
             countLinesLocalForGroups();
         }
@@ -1636,11 +1670,14 @@ public class Main {
             beginBuild.addActionListener(new SaveForReturn());
 
             lowPanel.add(TableSchedule);
+
+
             lowPanel.add(beginBuild, BoxLayout.Y_AXIS);
             lowPanel.add(viewSavedSchedule);
 
             frameOfTable.add(BorderLayout.SOUTH, lowPanel);
-
+            OutputDate(FILE_OF_TABLE_BS);
+            callBoxDataOfTable();
             pane = new JScrollPane(TableSchedule, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
                     ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
             TableSchedule.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -1651,11 +1688,8 @@ public class Main {
 
             frameOfTable.setVisible(true);
 
-            OutputDate(FILE_OF_TABLE_BS);
-            callBoxDataOfTable();
-
             TableSchedule.getColumnModel().getColumn(0).setPreferredWidth(90);
-            TableSchedule.setRowHeight(20);
+            TableSchedule.setRowHeight(40);
         }
     }
     static class BackUpOfDate extends TableDate implements ActionListener {
@@ -1697,36 +1731,57 @@ public class Main {
             frameOfBackUp.setResizable(false);
             frameOfBackUp.setLocationRelativeTo(null);
             frameOfBackUp.setVisible(true);
-           }
         }
+    }
 
     static class Unload extends BackUpOfDate implements ActionListener {
-        String FILE_NAME_STORAGE = "Storage.ini";
+
         public void actionPerformed(ActionEvent event) {
+            String[] listFiles_Storage = {"Repository",
+                    "DoneSchedule",
+                    "NamesList",
+                    "GroupsList",
+                    "SubjectsList",
+                    "TableOfHours"};
+
 
             progressBar.setStringPainted(true);
             progressBar.setMinimum(0);
             progressBar.setMaximum(100);
 
-                for(int i = 0; i <= 100; i ++) {
-                    progressBar.setValue(i);
-                }
-                    try {
-                        Unload(FILE_OF_REPOSITORY, FILE_NAME_STORAGE);
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(null, "Не удалось завершить операцию! ");
-                        progressBar.setVisible(false);
-                        infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
-                    }
-                    infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
-                    JOptionPane.showMessageDialog(null, "Данные выгружены! ");
-                    frameOfBackUp.dispose();
-                }
+            for (int i = 0; i <= 100; i++) {
+                progressBar.setValue(i);
+            }
+            try {
+
+                Unload("[" + listFiles_Storage[0] + "].txt", FILE_OF_REPOSITORY);
+                Unload("[" + listFiles_Storage[1] + "].txt", FILE_OF_TABLE_BS);
+                Unload("[" + listFiles_Storage[2] + "].txt", FILE_OF_NAMES);
+                Unload("[" + listFiles_Storage[3] + "].txt", FILE_OF_GROUPS);
+                Unload("[" + listFiles_Storage[4] + "].txt", FILE_OF_SUBJECTS);
+                Unload("[" + listFiles_Storage[5] + "].txt", FILE_OF_TABLE_HOURS);
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, "Не удалось завершить операцию! ");
+                progressBar.setVisible(false);
+                infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
             }
 
+            infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
+            JOptionPane.showMessageDialog(null, "Данные выгружены! ");
+            frameOfBackUp.dispose();
+        }
+    }
+
     static class Download extends BackUpOfDate implements ActionListener {
-        String FILE_NAME_STORAGE = "Storage.ini";
+
         public void actionPerformed(ActionEvent event) {
+            String[] listFiles_Storage = {"Repository",
+                    "DoneSchedule",
+                    "NamesList",
+                    "GroupsList",
+                    "SubjectsList",
+                    "TableOfHours"};
 
             progressBar.setStringPainted(true);
             progressBar.setMinimum(0);
@@ -1736,22 +1791,36 @@ public class Main {
                 progressBar.setValue(i);
             }
 
+            try {
+                Unload(FILE_OF_REPOSITORY, "[" + listFiles_Storage[0] + "].txt");
+                Unload(FILE_OF_TABLE_BS, "[" + listFiles_Storage[1] + "].txt");
+                Unload(FILE_OF_NAMES, "[" + listFiles_Storage[2] + "].txt");
+                Unload(FILE_OF_GROUPS,"[" + listFiles_Storage[3] + "].txt");
+                Unload(FILE_OF_SUBJECTS,"[" + listFiles_Storage[4] + "].txt");
+                Unload(FILE_OF_TABLE_HOURS,"[" + listFiles_Storage[5] + "].txt");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null, "Не удалось завершить операцию! ");
+                progressBar.setVisible(false);
+                infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
+            }
+            finally {
                 try {
-                    Unload(FILE_NAME_STORAGE, FILE_OF_REPOSITORY);
+                    JOptionPane.showMessageDialog(null, "Для продолжения, программа требует перезагрузки");
+                    Thread.sleep(3000);
+                    System.exit(0);
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Не удалось завершить операцию! ");
-                    progressBar.setVisible(false);
-                    infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
-                }
-                infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
-                JOptionPane.showMessageDialog(null, "Данные загружены! ");
 
-                frameOfBackUp.dispose();
+                }
+            }
+            infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
+            JOptionPane.showMessageDialog(null, "Данные загружены! ");
+
+            frameOfBackUp.dispose();
         }
     }
-        public static void Unload(String sourcePath, String destinationPath) throws IOException { // method for back up
-            Files.copy(Paths.get(sourcePath), new FileOutputStream(destinationPath));
-        }
+    public static void Unload(String sourcePath, String destinationPath) throws IOException { // method for back up
+        Files.copy(Paths.get(sourcePath), new FileOutputStream(destinationPath));
+    }
 
     static class FormOfRecovery extends TableDate implements ActionListener {
         static JProgressBar progressOfRecovery;
@@ -1799,19 +1868,19 @@ public class Main {
             JOptionPane.showMessageDialog(null, "Операция отменена!");
             infoAboutEvent.setIcon(new ImageIcon("src/noConfirmed.png"));
             frameOfRecovery.dispose();
-            }
         }
+    }
     static class RecoveryOfData extends FormOfRecovery implements ActionListener {
         public void actionPerformed(ActionEvent event) {
 
-            String[] listFiles = {"Repository.ini",
-                                  "DoneSchedule.ini",
-                                  "NamesList.ini",
-                                  "GroupsList.ini",
-                                  "SubjectsList.ini",
-                                  "Check.ini",
-                                  "TableOfHours.ini",
-                                  "DataNotes.ini"};
+            String[] listFiles = {"Repository.txt",
+                    "DoneSchedule.txt",
+                    "NamesList.txt",
+                    "GroupsList.txt",
+                    "SubjectsList.txt",
+                    "Check.txt",
+                    "TableOfHours.txt",
+                    "DataNotes.txt"};
 
             progressOfRecovery.setStringPainted(true);
             progressOfRecovery.setMinimum(0);
@@ -1832,14 +1901,14 @@ public class Main {
             JOptionPane.showMessageDialog(null, "Восстановление завершено!");
             infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
             frameOfRecovery.dispose();
-              }
         }
+    }
     static class SaveDataNotes extends TableDate implements ActionListener {
         public void actionPerformed(ActionEvent event) {
             dataNotes = notes.getText();
 
             try {
-                FileWriter write = new FileWriter("DataNotes.ini", false);
+                FileWriter write = new FileWriter("DataNotes.txt", false);
                 write.write(dataNotes);
                 write.close();
                 infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
@@ -1855,7 +1924,7 @@ public class Main {
     static class SaveForReturn extends TableDate implements ActionListener {
         public void actionPerformed(ActionEvent event) {
             String checkForAvailability = "";
-            try (FileReader read = new FileReader("Check.ini")) {
+            try (FileReader read = new FileReader("Check.txt")) {
                 BufferedReader buffer =  new BufferedReader(read);
                 checkForAvailability = buffer.readLine();
             } catch (IOException e) {
@@ -1877,8 +1946,8 @@ public class Main {
                 if (userChoice == 0) {
                     saveData();
                     JOptionPane.showMessageDialog(null, "Сохранение завершено!");
-                    } else {
-                        JOptionPane.showMessageDialog(null, "Сохранение отменено!");
+                } else {
+                    JOptionPane.showMessageDialog(null, "Сохранение отменено!");
                 }
             }
 
@@ -1907,9 +1976,10 @@ public class Main {
                     saveTable = TableSchedule.getValueAt(x, y);
                     System.out.print("[ " + saveTable + "] ");
                     try {
-                        FileWriter write = new FileWriter(FILE_OF_REPOSITORY, true);
-                        write.write(saveTable + "\n");
-                        write.close();
+                        BufferedWriter writingData = new BufferedWriter(new OutputStreamWriter(
+                                new FileOutputStream(FILE_OF_REPOSITORY, true), "UTF8"));
+                        writingData.write(saveTable + "\n");
+                        writingData.flush();
                         infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
                     } catch (IOException e) {
                         JOptionPane.showMessageDialog(null, "Файл не найден");
@@ -1949,13 +2019,13 @@ class SaveGroups extends Main.OpenFormGroups implements ActionListener {
         }
         else
             labelInfo.setText("Группа '" + textForGroups.getText() + "' сохранено");
-            placeForConfirmation.setVisible(true);
-            writeDate(save);
-            infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
-            textForGroups.setText("");
+        placeForConfirmation.setVisible(true);
+        writeDate(save);
+        infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
+        textForGroups.setText("");
 
-            sortBoxGroups.removeAllItems();
-            boxGroups.removeAllItems();
+        sortBoxGroups.removeAllItems();
+        boxGroups.removeAllItems();
 
         for(String counter : listForGroups) {
             boxGroups.addItem(counter);
@@ -1977,15 +2047,15 @@ class SaveNames extends Main.OpenFormNames implements ActionListener {
             return;
         }
         else
-            labelInfo.setText("Имя '" + textForNames.getText() + "' сохранено");
-            placeForConfirmation.setVisible(true);
-            writeDate(save);
-            infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
-            textForNames.setText("");
+            labelInfo.setText("ФИО '" + textForNames.getText() + "' сохранено");
+        placeForConfirmation.setVisible(true);
+        writeDate(save);
+        infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
+        textForNames.setText("");
 
 
-            sortBoxNames.removeAllItems();
-            boxNames.removeAllItems();
+        sortBoxNames.removeAllItems();
+        boxNames.removeAllItems();
 
         for(String counter : listForNames) {
             boxNames.addItem(counter);
@@ -2005,12 +2075,12 @@ class SaveSubjects extends Main.OpenFormSubject implements ActionListener { /// 
         }
         else
             labelInfoFrame.setText("Дисциплина '" + textForSubjects.getText() + "' сохранена");
-            placeForConfirmation.setVisible(true);
-            writeDate(save);
-            infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
-            textForSubjects.setText("");
+        placeForConfirmation.setVisible(true);
+        writeDate(save);
+        infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
+        textForSubjects.setText("");
 
-            boxSubjects.removeAllItems();
+        boxSubjects.removeAllItems();
         for(String counter : listForSubjects) {
             boxSubjects.addItem(counter);
         }
@@ -2020,40 +2090,41 @@ class SaveSubjects extends Main.OpenFormSubject implements ActionListener { /// 
 class DeleteAllDates extends Main.TableDate implements ActionListener {
     public void actionPerformed(ActionEvent event) {
 
-        String[] listFiles = {"Repository.ini",
-                              "DoneSchedule.ini",
-                              "NamesList.ini",
-                              "GroupsList.ini",
-                              "SubjectsList.ini",
-                              "Check.ini"};
+        String[] listFiles = {"Repository.txt",
+                "DoneSchedule.txt",
+                "NamesList.txt",
+                "GroupsList.txt",
+                "SubjectsList.txt",
+                "Check.txt"};
 
         Object[] options = {"Да",
-                            "Нет"};
-                 int userChoice = JOptionPane.showOptionDialog(frameOfTable,
+                "Нет"};
+
+        int userChoice = JOptionPane.showOptionDialog(frameOfTable,
                 "Вы действительно хотите удалить все данные?",
-                   "Удаление данных",
+                "Удаление данных",
                 JOptionPane.YES_NO_CANCEL_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
                 null,
                 options,
                 options[1]);
 
-                 if(userChoice == 0) {
+        if(userChoice == 0) {
 
-                     try {
-                         for (String choiceFile : listFiles) {
-                             FileWriter write = new FileWriter(choiceFile);
-                             write.write("");
-                             write.close();
-                         }
+            try {
+                for (String choiceFile : listFiles) {
+                    FileWriter write = new FileWriter(choiceFile);
+                    write.write("");
+                    write.close();
+                }
 
-                     } catch (IOException e) {
-                         JOptionPane.showMessageDialog(null, "Удаление не завершено по неизвестной причине");
-                     }
-                     JOptionPane.showMessageDialog(null, "Удаление завершено!");
-                     infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
-                    }
-                        else
-                            JOptionPane.showMessageDialog(null, "Удаление отменено!");
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null, "Удаление не завершено по неизвестной причине");
+            }
+            JOptionPane.showMessageDialog(null, "Удаление завершено!");
+            infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
+        }
+        else
+            JOptionPane.showMessageDialog(null, "Удаление отменено!");
     }
 }
