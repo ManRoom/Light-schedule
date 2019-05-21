@@ -12,8 +12,10 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.stream.Stream;
 
 public class Main {
@@ -41,12 +43,10 @@ public class Main {
             // If Nimbus is not available, you can set the GUI to another look and feel.
         }
 
-
         TableDate isStart = new TableDate();
         isStart.signInFrame();
 
         isStart.mainFrame();
-
     }
 
 
@@ -126,8 +126,8 @@ public class Main {
                 linesCountForNew = 0,
                 lineCountForNames = 0,
                 linesCountsForGroups = 0,
-                linesCountsForSubjects = 0;
-
+                linesCountsForSubjects = 0,
+                lineT = 0;
         static JComboBox<String> boxNames,
                 boxGroups,
                 boxSubjects,
@@ -143,20 +143,20 @@ public class Main {
                 NAME_ERROR_TABLE_OF_SAVE = "Таблица сохранения расписания",
                 NAME_ERROR_TABLE_OF_HOURS = "Таблица часов",
                 INFO_ABOUT_WORK = "Предварительно необходимо " +
-                        "выбрать параметр для сортировки",
+                                  "выбрать параметр для сортировки",
                 ATTENTION_NOT_SELECTED_TABLE = "Предварительно необходимо " +
-                        "открыть таличную часть для " +
-                        "дальнейшей печати!",
+                                               "открыть таличную часть для " +
+                                               "дальнейшей печати!",
                 INFO_RECOVERY = "<html> Вы действительно хотите восстановить в исходное состояние? " +
-                        "<br/>" +
-                        "Данная процедура создаст новые базы данных для дальнейшей работы " +
-                        "без сохранения данных предыдущих баз (если они имеются)" +
-                        "<br/>" +
-                        "Это операция необходима при возникновении проблем с" +
-                        " отсутствием чтения данных </html> ",
+                                "<br/>" +
+                                "Данная процедура создаст новые базы данных для дальнейшей работы " +
+                                "без сохранения данных предыдущих баз (если они имеются)" +
+                                "<br/>" +
+                                "Это операция необходима при возникновении проблем с" +
+                                " отсутствием чтения данных </html> ",
 
-        INFO_ABOUT_SU = "<html> Для продолжения создайте <br/> " +
-                "новую учетную запись! </html>",
+                INFO_ABOUT_SU = "<html> Для продолжения создайте <br/> " +
+                                "новую учетную запись! </html>",
                 INFO_ABOUT_SI = "Войдите как администратор или продолжите";
 
         static JPasswordField passwordUser,
@@ -377,9 +377,10 @@ public class Main {
             currentYear = realYear;
 
             String[] headers = {"Пн.", "Вт.", "Ср.", "Чт.", "Пт.", "Сб.", "Вс"};
-            for (int i = 0; i < 7; i++){
-                mtblCalendar.addColumn(headers[i]);
-            }
+
+                for(String countOfDay : headers) {
+                    mtblCalendar.addColumn(countOfDay);
+                }
 
             tblCalendar.getParent().setBackground(tblCalendar.getBackground());
 
@@ -491,15 +492,15 @@ public class Main {
 
             openFormSubjects.setBounds(10, 20, 32,32);
             openFormSubjects.setToolTipText("<html> Открыть форму для заполнения " +
-                    "<br/> данными о дисциплинах </html>");
+                                            "<br/> данными о дисциплинах </html>");
 
             openFormNames.setBounds(10, 80, 32,32);
             openFormNames.setToolTipText("<html> Открыть форму для заполнения " +
-                    "<br/> данными о преподавателях </html>");
+                                         "<br/> данными о преподавателях </html>");
 
             openFormGroups.setBounds(10, 140, 32,32);
             openFormGroups.setToolTipText("<html> Открыть форму для заполнения " +
-                    "<br/> данными о группах </html>");
+                                          "<br/> данными о группах </html>");
 
             printSavedTable.setBounds(10, 200, 32,32);
             printSavedTable.setToolTipText("<html> Создать печатную форму </html>");
@@ -753,6 +754,20 @@ public class Main {
             }
         }
 
+        public void Counter() {
+
+            lineT = 0;
+
+            try (LineNumberReader lnr = new LineNumberReader(new FileReader("data.txt"))) {
+                while (null != lnr.readLine()) {
+                    lineT++;
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Данные не определенны "
+                        + NAME_ERROR_TABLE);
+            }
+        }
+
         public void countLinesGeneralForTableOut() {
             linesCountForNew = 0;
             try (LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_REPOSITORY))) {
@@ -780,7 +795,7 @@ public class Main {
             try  {
                 BufferedReader reader = new BufferedReader(
                         new InputStreamReader(
-                                new FileInputStream(FILE_OF_GROUPS), Charset.forName(ENCODING_UTF8)));;
+                                new FileInputStream(FILE_OF_GROUPS), Charset.forName(ENCODING_UTF8)));
                 while ((line = reader.readLine()) != null) {
                     linesCountsForGroups--;
                     listForGroups[linesCountsForGroups] = line;
@@ -845,8 +860,58 @@ public class Main {
 
             }
         }
+        public void enterEmptyStrings() {
+            countLinesGeneralForTable();
+            String[] array = new String[linesCount];
+            System.out.println(linesCount + "many ");
+            String empty = " ";
+            int stopLine = 0;
+            int countLinesFromFile = 0;
 
+            String read;
+           /* try {
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(
+                                new FileInputStream("DoneSchedule.txt"), Charset.forName("UTF-8")));
+
+                while ((read = reader.readLine()) != null) {
+
+                    array[countLinesFromFile] = read;
+
+                    countLinesFromFile++;
+                    if(countLinesFromFile == linesCount) {
+                        countLinesFromFile = 0;
+                        break;
+                    }
+                }
+                int s = 0;
+                for(int i = 0; i < array.length; i++) {
+                    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+                            new FileOutputStream("DoneSchedule.txt", true), "UTF8"));
+                                  // if (stopLine == 0) {
+                                        while (s != 6) {
+                                            bw.write(" " + "\n");
+                                            s++;
+                                        }
+                                  //  }
+                                        for(int q = 0; q < 18; q++) {
+                                        bw.write(array[q] + "\n");
+                                          // stopLine++;
+                                            if (q == 17) {
+                                                s = 0;
+                                            }
+                                    }
+                                    bw.flush();
+                            }
+                    //System.out.println(array[i] + "///////// ");
+
+                reader.close();
+            } catch (IOException ex) {
+
+            }*/
+        }
         public void OutputDate(String nameFile) {
+            enterEmptyStrings();
             countLinesGeneralForTable();
             String[] timeLessons = new String[]{"08:20 - 08:50",
                                                 "09:00 - 10:30",
@@ -856,64 +921,62 @@ public class Main {
 
             int counter = 0;
             int countLinesForStop = linesCount;
-            int ColumnsGoTo = 0;
-            int CountRowFromFile = 0;
+            int columnsGoTo = 0;
+            int countRowFromFile = 0;
             int linesGoTo = 0;
             int column = TableSchedule.getColumnCount();
             int countColumn = column;
             int countLessons = 0;
-            int row = TableSchedule.getRowCount();
+
             try {
                 BufferedReader reader = new BufferedReader(
                         new InputStreamReader(
                                 new FileInputStream(FILE_OF_TABLE_BS), Charset.forName(ENCODING_UTF8)));
 
-                while (!dateFromFile.equals(" ")) {
+               while (dateFromFile != null) {
                     linesCount--;
                     try (Stream<String> lines = Files.lines(Paths.get(nameFile))) {
+
+                        System.out.print(linesCount + " )" + linesGoTo + "] ");
                         dateFromFile = lines.skip(linesGoTo).findFirst().get(); // back method through '-'
                         linesGoTo++;
                         counter++;
-                        ColumnsGoTo++;
+                        columnsGoTo++;
                     }
-                    if (ColumnsGoTo == countColumn) {
-                        CountRowFromFile++;
-                        ColumnsGoTo = 1;
+
+                    if (columnsGoTo == countColumn) {
+                        countRowFromFile++;
+                        columnsGoTo = 1;
                         counter = 1;
                     }
+
                     if (countLessons == timeLessons.length) {
                         countLessons = 0;
                     }
 
-                    if(CountRowFromFile == 0) {
-                        model.addRow(new Object[]{timeLessons[countLessons], ""});
-                        TableSchedule.setValueAt("", (counter - counter) + CountRowFromFile, counter);
-                    } else {
-                       // linesGoTo++;
                         model.addRow(new Object[]{timeLessons[countLessons], dateFromFile});
-                        TableSchedule.setValueAt(dateFromFile, (counter - counter) + CountRowFromFile, counter);
-                    }
-                    System.out.print(CountRowFromFile + " ++");
+                        TableSchedule.setValueAt(dateFromFile, (counter - counter) + countRowFromFile, counter);
+
                     countLessons++;
                 }
                 reader.close();
             } catch (Exception fileNotFound) {
                 // JOptionPane.showMessageDialog(null, "No provide"); // Will be exception by reason of "while" above.
             }
-          int valueOfDeleteRow = CountRowFromFile + 1;
+          int valueOfDeleteRow = countRowFromFile + 1; //+1
             while (valueOfDeleteRow <= (countLinesForStop - 1)) {
                 valueOfDeleteRow++;
-                model.removeRow(CountRowFromFile + 1);
+                model.removeRow(countRowFromFile + 1); // +1
             }
         }
 
         public void OutputDateForNew(String nameFile) {
             countLinesGeneralForTableOut();
             String[] timeLessons = new String[]{"08:20 - 08:50",
-                    "09:00 - 10:30",
-                    "10:45 - 12:15",
-                    "12:45 - 14:15",
-                    "14:30 - 16:00"};
+                                                "09:00 - 10:30",
+                                                "10:45 - 12:15",
+                                                "12:45 - 14:15",
+                                                "14:30 - 16:00"};
 
             int counter = 0;
             int countLinesForStop = linesCountForNew;
@@ -934,7 +997,7 @@ public class Main {
                         new InputStreamReader(
                                 new FileInputStream(FILE_OF_REPOSITORY), Charset.forName(ENCODING_UTF8)));
 
-                while (!dateFromFile.equals(" ")) {
+                while (dateFromFile != null) {
                     linesCountForNew--;
                     try (Stream<String> lines = Files.lines(Paths.get(nameFile))) {
                         dateFromFile = lines.skip(linesGoTo).findFirst().get();
@@ -1071,12 +1134,12 @@ public class Main {
 
         public void showDateForNew() {
             String[] daysOfWeek = {"Пары",
-                    "Понедельник",
-                    "Вторник",
-                    "Среда",
-                    "Четверг",
-                    "Пятница",
-                    "Суббота"};
+                                   "Понедельник",
+                                   "Вторник",
+                                   "Среда",
+                                   "Четверг",
+                                   "Пятница",
+                                   "Суббота"};
 
             for(String counter : daysOfWeek) {
                 newModelForStorage.addColumn(counter);
@@ -1128,7 +1191,6 @@ public class Main {
                 try {
                     FileWriter file = new FileWriter(FILE_OF_TABLE_HOURS);
                     file.write("\n");
-                    System.out.println(" !@# ");
                     file.close();
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(null, "Данные не определенны "
@@ -1180,7 +1242,6 @@ public class Main {
                     for(String counters : listForSubjects) {
                         th_call.addRow(new Object[]{counters});
                     }
-                    //th_call.addRow(new Object[]{dateFromFile});
 
                     tableHours.setValueAt(dateFromFile, (counter - counter) + CountRowFromFile, counter);
                 }
@@ -1358,23 +1419,52 @@ public class Main {
 
 
     static class AddDate extends Main.TableDate implements ActionListener {
+
         public void actionPerformed(ActionEvent event) {
+
+            countLinesGeneralForTable();
+            String[] arrayOfStrings = new String[linesCount];
+            System.out.print(arrayOfStrings.length + "?");
+
+//            int columns = TableSchedule.getColumnCount();
 
             generalLst.append(stringWrite + "\n");
             generalLst.append("-------------------------------------------------------------------------------" + "\n");
 
             System.out.print("adding line is --> [" + stringWrite + "]\n");
 
-
             try  {
                 BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream(FILE_OF_TABLE_BS, true), "UTF8"));
+                        new FileOutputStream("data.txt", true), "UTF8"));
+         /*       if(valueGoToLine == 0) {
+                    for (int i = 0; i < 7 - (7 / 7); i++) {
+                       bw.write( " " + "\n");
+                    }
+                }
+                valueGoToLine++;
+                if(valueGoToLine == (7 - 1) * ((7 - 1) / 2)) {
+                    valueGoToLine = 0;
+                }*/
+
                 bw.write(stringWrite + "\n");
                 bw.flush();
             }
             catch (IOException e) {
                 JOptionPane.showMessageDialog(null, "Запись не может быть завершена");
             }
+
+
+
+
+
+
+           /* try (Stream<String> lines = Files.lines(Paths.get(FILE_OF_TABLE_BS))) {
+
+                dateFromFile = lines.skip(n).findFirst().get(); // back method through '-'
+                System.out.print(dateFromFile + " )" + n + "] ");
+            } catch (Exception ex) {
+
+            }*/
         }
     }
 
@@ -1593,44 +1683,74 @@ public class Main {
         static JTextField textForGroups;
         static String save;
         static JLabel labelInfo;
-        static JLabel placeForConfirmation;
-
+        //static JLabel placeForConfirmation;
+        static JTable tableOfData;
+        static DefaultTableModel mod;
+        static String read;
         public void actionPerformed(ActionEvent event) {
-
+            mod = new DefaultTableModel();
+            mod.addColumn("Data of groups");
+            readTable();
+            tableOfData = new JTable(mod);
             labelInfo = new JLabel("Запишите группу для сохранения");
 
             addDate = new JButton("Сохранить");
 
             textForGroups = new JTextField();
-            placeForConfirmation = new JLabel(new ImageIcon("src/confirmation.png"));
-            placeForConfirmation.setVisible(false);
+          //  placeForConfirmation = new JLabel(new ImageIcon("src/confirmation.png"));
+          //  placeForConfirmation.setVisible(false);
             labelInfo.setFont(new Font("Tahoma", Font.PLAIN, 13));
             panelOfComponents = new JPanel();
             panelOfComponents.setLayout(null);
 
             panelOfComponents.add(labelInfo);
             panelOfComponents.add(textForGroups);
-            panelOfComponents.add(placeForConfirmation);
+           // panelOfComponents.add(placeForConfirmation);
             panelOfComponents.add(addDate);
+            panelOfComponents.add(tableOfData);
 
+            JScrollPane p = new JScrollPane(tableOfData, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+                    ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+            tableOfData.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+            panelOfComponents.add(p);
+            p.setBounds(20,130, 225, 200);
             labelInfo.setBounds(20, 20, 225, 20);
             textForGroups.setBounds(20, 50, 225, 28);
-            placeForConfirmation.setBounds(270, 20, 100, 50);
+            //placeForConfirmation.setBounds(270, 20, 100, 50);
             addDate.setBounds(120, 80, 125, 27);
-
+           // tableOfData.setBounds(20,130, 225, 200);
 
             FrameForGroups = new JFrame("Добавить группу в список");
             FrameForGroups.setIconImage(Toolkit.getDefaultToolkit().getImage("src/iconOfFrame.png"));
 
-            FrameForGroups.setSize(400, 160);
+
+            FrameForGroups.setSize(300, 400);
             FrameForGroups.add(panelOfComponents);
             FrameForGroups.setLocationRelativeTo(null);
             FrameForGroups.setResizable(false);
             FrameForGroups.setVisible(true);
 
             addDate.addActionListener(new SaveGroups());
-        }
 
+        }
+        public void readTable() {
+
+            try {
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(
+                                new FileInputStream(FILE_OF_GROUPS), Charset.forName("UTF-8")));
+                while ((read = reader.readLine()) != null) {
+                    mod.addRow(new Object[]{read});
+                }
+                reader.close();
+            } catch (IOException ex) {
+
+            }
+            for(int i = 0; i < linesCountsForGroups; i++) {
+                //mod.removeRow(i);
+                mod.setValueAt(read,i,0);
+            }
+        }
         public void writeDate(String dataGroups) {
             try {
                 BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
@@ -1643,10 +1763,74 @@ public class Main {
                                                                              " " + NAME_ERROR_GROUPS);
             }
             countLinesLocalForGroups();
+            readTable();
         }
     }
     static class BuildSchedule extends TableDate implements ActionListener {
+        int n = 0;
         public void actionPerformed(ActionEvent event) {
+            Counter();
+            String[] arrayOfStrings = new String[lineT];
+            System.out.println(arrayOfStrings.length + " -- - - ");
+            String read;
+            try {
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(
+                                new FileInputStream("data.txt"), Charset.forName("UTF-8")));
+
+                while ((read = reader.readLine()) != null) {
+
+                    arrayOfStrings[n] = read;
+                    n++;
+                    if(n == lineT) {
+                        n = 0;
+                        break;
+                    }
+                    System.out.println(arrayOfStrings[n] +  ".......");
+                }
+                reader.close();
+            } catch (IOException ex) {
+
+            }
+            for(int i = 0; i < arrayOfStrings.length; i++) {
+                System.out.println(arrayOfStrings[i] + "] ");
+            }
+
+            int s = 0;
+            int line = 0;
+            try {
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream("DoneSchedule.txt"), "UTF8"));
+                while (s != 6) {
+                    bw.write(" " + "\n");
+                    s++;
+                }
+
+
+                int j = (lineT / 2);
+
+                for (int i = (lineT / 2); i < lineT; i++) {
+                    line = line + 2;
+                    bw.write(arrayOfStrings[i] + "\n");
+                    j--;
+                    bw.write(arrayOfStrings[j] + "\n");
+                    System.out.println(line + " line ");
+                    if(line == 18) {
+                        System.out.println("БЛЯ ");
+                        for(int z = 0; z < 6; z++) {
+                            bw.write(" " + "\n");
+                        }
+                        line = 0;
+                    }
+                    if(j == 0) {
+                        break;
+                    }
+
+                }
+                bw.flush();
+            } catch (Exception ex) {
+
+            }
 
             isText = new JTextField(30);
 
@@ -2019,7 +2203,7 @@ class SaveGroups extends Main.OpenFormGroups implements ActionListener {
         }
         else
             labelInfo.setText("Группа '" + textForGroups.getText() + "' сохранено");
-        placeForConfirmation.setVisible(true);
+       /// placeForConfirmation.setVisible(true);
         writeDate(save);
         infoAboutEvent.setIcon(new ImageIcon("src/confirmed.png"));
         textForGroups.setText("");
