@@ -1,14 +1,8 @@
 package tkmp.schedule;
 
-import org.apache.poi.hpsf.Vector;
 import org.apache.poi.hssf.usermodel.*;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellReference;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -24,8 +18,6 @@ import java.nio.file.Paths;
 
 import java.util.Iterator;
 import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 public class Main {
@@ -84,6 +76,8 @@ public class Main {
                 recoveryOfDate,
                 importOfTablePath,
                 deleteSelectedRow,
+                writeInTable,
+                deleteTable,
                 exportOfTables;
         static JLabel infoAboutOperation,
                 infoEnter,
@@ -169,7 +163,9 @@ public class Main {
 
         static int countRows;
         static JTextArea log;
-
+        static JTable tableOfData_groups;
+        static JTable tableOfData_names;
+        static JTable tableOfData_subjects;
         public void showPanelCreateAccount() {
             imageBack.setIcon(new ImageIcon("src/main/java/rock_dark.jpg"));
 
@@ -337,6 +333,7 @@ public class Main {
             viewSavedSchedule = new JButton("Просмотр расписания");
             printTableOfHours = new JButton(new ImageIcon("src/main/java/print.png"));
             importOfTablePath = new JButton(new ImageIcon("src/main/java/import_icon.png"));
+            deleteTable = new JButton(new ImageIcon("src/main/java/delete_table.png"));
 
             openFormSubjects.setContentAreaFilled(false);
             openFormNames.setContentAreaFilled(false);
@@ -347,6 +344,7 @@ public class Main {
             importOfTablePath.setContentAreaFilled(false);
             deleteSelectedRow.setContentAreaFilled(false);
             printTableOfHours.setContentAreaFilled(false);
+            deleteTable.setContentAreaFilled(false);
 
             importOfTablePath.addActionListener(new ExportTableOfHours());
             openFormSubjects.addActionListener(new OpenFormSubject());
@@ -356,9 +354,8 @@ public class Main {
             recoveryOfDate.addActionListener(new FormOfRecovery());
             backUpOfData.addActionListener(new BackUpOfDate());
             deleteSelectedRow.addActionListener(new DeleteSelectedRow());
-
             printTableOfHours.addActionListener(new PrintTableOfHours());
-
+            deleteTable.addActionListener(new ClearTable());
             createSchedule = new JButton("Создать расписание");
             createSchedule.addActionListener(new BuildSchedule());
 
@@ -368,6 +365,8 @@ public class Main {
             sortOnClick = new JButton("Сортировать");
             sortOnClick.addActionListener(new SortDate());
 
+            writeInTable = new JButton("Заполнить");
+            writeInTable.addActionListener(new FillTable());
 
             mainFrame = new JFrame("Помощник в составлени расписания");
             mainFrame.setIconImage(Toolkit.getDefaultToolkit().getImage("src/main/java/iconOfFrame.png"));
@@ -427,6 +426,8 @@ public class Main {
             deleteSelectedRow.setBounds(1220, 20, 24, 24);
             printTableOfHours.setBounds(1220, 54, 24, 24);
             importOfTablePath.setBounds(1220, 88, 24, 24);
+            deleteTable.setBounds(1220,122,24,24);
+
             log = new JTextArea();
             log.setFont(new Font("Verdana", Font.PLAIN, 11));
             log.setEnabled(false);
@@ -441,8 +442,8 @@ public class Main {
 
             sortBoxNames.setBounds(70, 270, 225, 30);
             sortBoxGroups.setBounds(70, 330, 225, 30);
-            viewSavedSchedule.setBounds(570, 730, 170, 30);
-
+            viewSavedSchedule.setBounds(575, 730, 170, 30);
+            writeInTable.setBounds(750,730,150,30);
             modelOfCurrentlyChange = new DefaultTableModel();
             tableOfCurrentlyChange = new JTable(modelOfCurrentlyChange);
             refreshTableOfData();
@@ -452,6 +453,8 @@ public class Main {
             tableOfCurrentlyChange.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
             tableOfCurrentlyChange.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
             mainFrame.add(scrollOfTable);
+
+            tableOfCurrentlyChange.setAutoCreateRowSorter(true);
 
             JPanel panelOfManagement = new JPanel();
             panelOfManagement.setBackground(Color.lightGray);
@@ -480,6 +483,8 @@ public class Main {
             scrollOfLog.setBounds(400, 520, 800, 200);
 
             readTable("Out.txt");
+            mainFrame.add(deleteTable);
+            mainFrame.add(writeInTable);
             mainFrame.add(importOfTablePath);
             mainFrame.add(printTableOfHours);
             mainFrame.add(panelOfManagement);
@@ -503,7 +508,6 @@ public class Main {
             mainFrame.setResizable(false);
             mainFrame.setLocationRelativeTo(null);
             mainFrame.setVisible(false);
-
         }
 
         public void refreshTableOfData() {
@@ -752,10 +756,10 @@ public class Main {
             countLinesGeneralForTable();
 
             String[] timeLessons = new String[]{"08:20 - 08:50",
-                    "09:00 - 10:30",
-                    "10:45 - 12:15",
-                    "12:45 - 14:15",
-                    "14:30 - 16:00"};
+                                                "09:00 - 10:30",
+                                                "10:45 - 12:15",
+                                                "12:45 - 14:15",
+                                                "14:30 - 16:00"};
 
             int counter = 0;
             int countLinesForStop = linesCount;
@@ -1130,18 +1134,16 @@ public class Main {
         static String save;
         static JLabel labelInfoFrame;
 
-
-        static JTable tableOfData;
         static DefaultTableModel modelSubjects;
         static String read;
         String getTextFromTF;
 
         public void actionPerformed(ActionEvent event) {
             modelSubjects = new DefaultTableModel();
-            tableOfData = new JTable(modelSubjects);
+            tableOfData_subjects = new JTable(modelSubjects);
             modelSubjects.addColumn("Список сохраненных дисциплин: ");
 
-            tableOfData.getColumnModel().getColumn(0).setPreferredWidth(480);
+            tableOfData_subjects.getColumnModel().getColumn(0).setPreferredWidth(480);
             try {
                 BufferedReader reader = new BufferedReader(
                         new InputStreamReader(
@@ -1183,9 +1185,9 @@ public class Main {
 
             FrameForSubjects = new JFrame("Добавить дисциплину");
             FrameForSubjects.setIconImage(Toolkit.getDefaultToolkit().getImage("src/main/java/iconOfFrame.png"));
-            JScrollPane paneOfTable = new JScrollPane(tableOfData, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+            JScrollPane paneOfTable = new JScrollPane(tableOfData_subjects, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
                     ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-            tableOfData.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+            tableOfData_subjects.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
             panelOfComponents.add(paneOfTable);
             paneOfTable.setBounds(5, 100, 480, 185);
             FrameForSubjects.add(panelOfComponents);
@@ -1194,7 +1196,7 @@ public class Main {
             FrameForSubjects.setLocationRelativeTo(null);
             FrameForSubjects.setResizable(false);
             FrameForSubjects.setVisible(true);
-
+            tableOfData_subjects.setAutoCreateRowSorter(true);
             addDate.addActionListener(new SaveSubjects());
         }
 
@@ -1226,11 +1228,9 @@ public class Main {
         JButton addDate;
         JPanel panelOfComponents;
         JButton importOfData;
-
         static JTextField textForNames;
         static String save;
         static JLabel labelInfo;
-        static JTable tableOfData;
         static DefaultTableModel modelNames;
         static String read;
         String getTextFromTF;
@@ -1238,10 +1238,10 @@ public class Main {
         public void actionPerformed(ActionEvent event) {
 
             modelNames = new DefaultTableModel();
-            tableOfData = new JTable(modelNames);
+            tableOfData_names = new JTable(modelNames);
             modelNames.addColumn("Список сохраненных имен: ");
 
-            tableOfData.getColumnModel().getColumn(0).setPreferredWidth(480);
+            tableOfData_names.getColumnModel().getColumn(0).setPreferredWidth(480);
             try {
                 BufferedReader reader = new BufferedReader(
                         new InputStreamReader(
@@ -1287,15 +1287,17 @@ public class Main {
 
             frameForNames = new JFrame("Добавить имя");
             frameForNames.setIconImage(Toolkit.getDefaultToolkit().getImage("src/main/java/iconOfFrame.png"));
-            JScrollPane paneOfTable = new JScrollPane(tableOfData, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+            JScrollPane paneOfTable = new JScrollPane(tableOfData_names, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
                     ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-            tableOfData.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+            tableOfData_names.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
             panelOfComponents.add(paneOfTable);
             paneOfTable.setBounds(5, 100, 480, 185);
 
             frameForNames.add(panelOfComponents);
             frameForNames.setSize(510, 330);
             frameForNames.setVisible(true);
+
+            tableOfData_names.setAutoCreateRowSorter(true);
 
             addDate.addActionListener(new SaveNames());
             frameForNames.setLocationRelativeTo(null);
@@ -1335,7 +1337,7 @@ public class Main {
         static JTextField textForGroups;
         static String save;
         static JLabel labelInfo;
-        static JTable tableOfData;
+
         static DefaultTableModel modelGroups;
         static String read;
         String getTextFromTF;
@@ -1356,8 +1358,9 @@ public class Main {
 
             }
 
-            tableOfData = new JTable(modelGroups);
-            tableOfData.getColumnModel().getColumn(0).setPreferredWidth(480);
+            tableOfData_groups = new JTable(modelGroups);
+            tableOfData_groups.getColumnModel().getColumn(0).setPreferredWidth(480);
+
             labelInfo = new JLabel("Запишите группу для сохранения");
 
             addDate = new JButton("Сохранить");
@@ -1375,7 +1378,7 @@ public class Main {
             panelOfComponents.add(textForGroups);
             panelOfComponents.add(importOfData);
             panelOfComponents.add(addDate);
-            panelOfComponents.add(tableOfData);
+            panelOfComponents.add(tableOfData_groups);
 
             deleteDateFromFiles = new JButton(new ImageIcon("src/main/java/delete_all.png"));
             deleteDateFromFiles.setBounds(410, 50, 32, 32);
@@ -1383,9 +1386,9 @@ public class Main {
             deleteDateFromFiles.setToolTipText("<html> Удалить данные </html>");
             deleteDateFromFiles.addActionListener(new DeleteDataOfGroups());
 
-            JScrollPane paneOfTable = new JScrollPane(tableOfData, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+            JScrollPane paneOfTable = new JScrollPane(tableOfData_groups, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
                     ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-            tableOfData.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+            tableOfData_groups.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
             panelOfComponents.add(paneOfTable);
             paneOfTable.setBounds(5, 100, 480, 185);
             labelInfo.setBounds(5, 20, 225, 20);
@@ -1405,6 +1408,7 @@ public class Main {
 
             addDate.addActionListener(new SaveGroups());
 
+            tableOfData_groups.setAutoCreateRowSorter(true);
         }
 
         public void readTable() {
@@ -1433,6 +1437,7 @@ public class Main {
         int valueOfNumber = 0;
 
         public void actionPerformed(ActionEvent event) {
+
             clearFile();
             checkParameters();
             countValue();
@@ -1612,6 +1617,7 @@ public class Main {
                 }
 
             }
+
         }
     }
 
@@ -1981,8 +1987,27 @@ public class Main {
         }
     }
     static class ViewSaveSchedule extends TableDate implements ActionListener {
+
         public void actionPerformed(ActionEvent event) {
             viewSchedule();
+        }
+
+    }
+    static class FillTable extends TableDate implements ActionListener {
+        public void actionPerformed(ActionEvent event) {
+            countLinesLocalForName();
+            countLinesLocalForObjects();
+            countLinesLocalForGroups();
+            String stringBuild = "";
+            int maxValue = 0;
+
+            maxValue = Math.min(Math.min(listForGroups.length, listForSubjects.length), listForNames.length);
+            System.out.println(maxValue + " is min");
+            for(int index = 0; index < maxValue; index++) {
+                stringBuild = listForSubjects[index] + "  " + listForNames[index] + " " + listForGroups[index];
+                System.out.println(stringBuild);
+                modelOfCurrentlyChange.addRow(new Object[] {index + 1, stringBuild});
+            }
         }
     }
     static class ImportOfSubjects extends OpenFormSubject implements ActionListener {
@@ -2108,6 +2133,11 @@ public class Main {
             }
         }
 
+    }
+    static class ClearTable extends TableDate implements ActionListener {
+        public void actionPerformed(ActionEvent event) {
+            modelOfCurrentlyChange.setRowCount(0);
+        }
     }
 }
 
@@ -2249,7 +2279,7 @@ class DeleteDataOfNames extends Main.TableDate implements ActionListener {
 class DeleteDataOfSubjects extends Main.TableDate implements ActionListener {
     public void actionPerformed(ActionEvent event) {
         Object[] options = {"Да",
-                "Нет"};
+                             "Нет"};
 
         int userChoice = JOptionPane.showOptionDialog(frameOfTable,
                 "Вы действительно хотите удалить все данные?",
