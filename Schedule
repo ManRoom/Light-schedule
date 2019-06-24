@@ -5,6 +5,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellReference;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.Color;
@@ -16,8 +17,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import java.util.Iterator;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class Main {
@@ -37,17 +37,18 @@ public class Main {
 
 
     static class TableDate extends JFrame implements ActionListener {
-
+        static final int VARIABLE_MATH_OPERATION = 1;
         private static final String ENCODING_UTF8 = "UTF-8";
 
         final static String FILE_OF_TABLE_BS = "DoneSchedule.txt",
-                FILE_CHECK_SAVE_DATE = "Check.txt",
+                FILE_CHECK_SAVE_DATE = "CheckForFile.txt",
                 FILE_OF_NAMES = "NamesList.txt",
                 FILE_OF_GROUPS = "GroupsList.txt",
                 FILE_OF_SUBJECTS = "SubjectsList.txt",
                 FILE_OF_REPOSITORY = "Repository.txt",
-                FILE_OF_USER_DATE = "UserOfDate.txt";
-
+                FILE_OF_USER_DATE = "UserOfDate.txt",
+                FILE_OF_DATA = "data.txt",
+                FILE_OF_OUT_SOURCE = "Out_source.txt";
         static JTable TableSchedule;
         static JPanel lowPanel,
                 commonPanel;
@@ -59,11 +60,11 @@ public class Main {
 
         static JButton openFormSubjects,
                 openFormNames,
+                beginBuild,
                 openFormGroups,
                 viewSavedSchedule,
                 addDateToFile,
                 createSchedule,
-                beginBuild,
                 deleteDateFromFiles,
                 sortOnClick,
                 signIn,
@@ -84,7 +85,6 @@ public class Main {
                 infoRepeat,
                 rule,
                 imageBack,
-                icon,
                 infoSI_SU;
 
         JScrollPane pane;
@@ -166,9 +166,8 @@ public class Main {
         static JTable tableOfData_groups;
         static JTable tableOfData_names;
         static JTable tableOfData_subjects;
+        static String[] daysOfWeek;
         public void showPanelCreateAccount() {
-            imageBack.setIcon(new ImageIcon("src/main/java/rock_dark.jpg"));
-
             infoAboutOperation.setVisible(true);
             signUpAccount.setVisible(true);
             passwordUser.setVisible(true);
@@ -192,8 +191,6 @@ public class Main {
 
         public void signInFrame() {
             passwordUserCheck = new JPasswordField();
-
-            passwordUserCheck.setBorder(null);
             signIn = new JButton("Войти");
             signUp = new JButton("Создать");
 
@@ -220,24 +217,24 @@ public class Main {
 
             System.out.println("Current condition [" + condition + "]");
 
-            imageBack = new JLabel(new ImageIcon("src/main/java/rock.jpg"));
+            imageBack = new JLabel(new ImageIcon());
 
             infoAboutOperation = new JLabel("<html> Создайте пароль для " +
-                    "дальнейшей аутентификации </html> ");
+                    "дальнейшего входа </html> ");
 
             infoEnter = new JLabel("Введите пароль");
             infoRepeat = new JLabel("Повторите пароль");
             rule = new JLabel("Роль:");
 
-            infoAboutOperation.setFont(new Font("Verdana", Font.BOLD, 14));
-            infoRepeat.setFont(new Font("Verdana", Font.BOLD, 13));
-            infoEnter.setFont(new Font("Verdana", Font.BOLD, 13));
-            rule.setFont(new Font("Verdana", Font.BOLD, 13));
+            infoAboutOperation.setFont(new Font("Verdana", Font.PLAIN, 14));
+            infoRepeat.setFont(new Font("Verdana", Font.PLAIN, 13));
+            infoEnter.setFont(new Font("Verdana", Font.PLAIN, 13));
+            rule.setFont(new Font("Verdana", Font.PLAIN, 13));
 
-            infoAboutOperation.setForeground(Color.WHITE);
-            infoRepeat.setForeground(Color.WHITE);
-            infoEnter.setForeground(Color.WHITE);
-            rule.setForeground(Color.WHITE);
+            infoAboutOperation.setForeground(Color.BLACK);
+            infoRepeat.setForeground(Color.BLACK);
+            infoEnter.setForeground(Color.BLACK);
+            rule.setForeground(Color.BLACK);
 
             rules = new JTextField("Администратор");
             rules.setEnabled(false);
@@ -250,11 +247,8 @@ public class Main {
 
             blockAll();
 
-            icon = new JLabel(new ImageIcon("src/main/java/confirm_verify.png"));
-            icon.setVisible(false);
-
             infoSI_SU = new JLabel();
-            infoSI_SU.setFont(new Font("Verdana", Font.BOLD, 14));
+            infoSI_SU.setFont(new Font("Verdana", Font.PLAIN, 14));
             infoSI_SU.setForeground(Color.BLACK);
 
             if (condition.equals("notIsEmpty")) {
@@ -269,49 +263,37 @@ public class Main {
 
             commonPanel = new JPanel();
             commonPanel.setLayout(null);
+            Border etched = BorderFactory.createEtchedBorder();
 
             if (condition.equals("isEmpty")) {
                 infoSI_SU.setText(INFO_ABOUT_SU);
 
-            } else
+            }
+
+            if (condition.equals("notIsEmpty")) {
                 infoSI_SU.setText(INFO_ABOUT_SI);
+            }
+
+            Border titled = BorderFactory.createTitledBorder(etched, infoSI_SU.getText());
+            commonPanel.setBorder(titled);
 
             System.out.println("Current condition [" + condition + "]");
 
-            imageBack.setBounds(0, 0, 1200, 600);
-            infoSI_SU.setBounds(60, 50, 400, 35);
-            passwordUserCheck.setBounds(60, 100, 230, 25);
-            signIn.setBounds(60, 135, 110, 30);
-            signUp.setBounds(181, 135, 110, 30);
-            icon.setBounds(1045, 30, 50, 50);
+            passwordUserCheck.setBounds(20, 40, 230, 25);
+            signIn.setBounds(20, 70, 110, 30);
+            signUp.setBounds(141, 70, 110, 30);
 
-            infoAboutOperation.setBounds(620, 50, 500, 25);
-            infoEnter.setBounds(622, 85, 150, 25);
-            passwordUser.setBounds(620, 115, 225, 25);
-            infoRepeat.setBounds(622, 145, 150, 25);
-            repeatPU.setBounds(620, 175, 225, 25);
-            rule.setBounds(622, 205, 225, 25);
-            rules.setBounds(620, 235, 225, 30);
-            signUpAccount.setBounds(696, 280, 150, 30);
-
-
-            commonPanel.add(passwordUser);
-            commonPanel.add(repeatPU);
-            commonPanel.add(infoEnter);
-            commonPanel.add(infoRepeat);
-            commonPanel.add(rules);
-            commonPanel.add(signUpAccount);
-            commonPanel.add(rule);
-            commonPanel.add(infoAboutOperation);
+            commonPanel.setBounds(30, 10, 300, 120);
             commonPanel.add(passwordUserCheck);
             commonPanel.add(signUp);
             commonPanel.add(signIn);
-            commonPanel.add(icon);
-            commonPanel.add(infoSI_SU);
-            commonPanel.add(imageBack);
+
 
             authorization.add(commonPanel);
-            authorization.setSize(1200, 600);
+            authorization.add(imageBack);
+
+            authorization.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            authorization.setSize(370, 180);
             authorization.setResizable(false);
             authorization.setLocationRelativeTo(null);
             authorization.setVisible(true);
@@ -319,7 +301,7 @@ public class Main {
 
         public void mainFrame() {
 
-            JLabel infoAboutAll = new JLabel("<html> Выберите параметр для сортировки </html>");
+            JLabel infoAboutAll = new JLabel("<html> Выберите параметр для <br> сортировки </br> </html>");
             JLabel infoAboutGroups = new JLabel("<html> по группам: </html> ");
             JLabel infoAboutNames = new JLabel("<html> по преподавателям: </html> ");
 
@@ -335,6 +317,7 @@ public class Main {
             importOfTablePath = new JButton(new ImageIcon("src/main/java/import_icon.png"));
             deleteTable = new JButton(new ImageIcon("src/main/java/delete_table.png"));
 
+            openFormSubjects.setFocusPainted(false);
             openFormSubjects.setContentAreaFilled(false);
             openFormNames.setContentAreaFilled(false);
             openFormGroups.setContentAreaFilled(false);
@@ -356,6 +339,8 @@ public class Main {
             deleteSelectedRow.addActionListener(new DeleteSelectedRow());
             printTableOfHours.addActionListener(new PrintTableOfHours());
             deleteTable.addActionListener(new ClearTable());
+            deleteTable.addActionListener(new ClearTable());
+
             createSchedule = new JButton("Создать расписание");
             createSchedule.addActionListener(new BuildSchedule());
 
@@ -415,35 +400,33 @@ public class Main {
             backUpOfData.setBounds(10, 440, 32, 32);
             backUpOfData.setToolTipText("<html> Создание резервной копии данных </html>");
 
-            boxSubjects.setBounds(70, 20, 225, 30);
-            boxNames.setBounds(70, 60, 225, 30);
-            boxGroups.setBounds(70, 100, 225, 30);
+            boxSubjects.setBounds(60, 20, 150, 25);
+            boxNames.setBounds(60, 60, 150, 25);
+            boxGroups.setBounds(60, 100, 150, 25);
 
-            addDateToFile.setBounds(195, 140, 100, 30);
-            createSchedule.setBounds(400, 730, 170, 30);
-            sortOnClick.setBounds(175, 370, 120, 30);
+            addDateToFile.setBounds(120, 140, 90, 25);
+            createSchedule.setBounds(230, 580, 140, 25);
+            sortOnClick.setBounds(110, 370, 100, 25);
 
-            deleteSelectedRow.setBounds(1220, 20, 24, 24);
-            printTableOfHours.setBounds(1220, 54, 24, 24);
-            importOfTablePath.setBounds(1220, 88, 24, 24);
-            deleteTable.setBounds(1220,122,24,24);
 
             log = new JTextArea();
             log.setFont(new Font("Verdana", Font.PLAIN, 11));
             log.setEnabled(false);
-            infoAboutAll.setBounds(70, 220, 350, 25);
+            infoAboutAll.setBounds(60, 210, 350, 30);
             infoAboutAll.setFont(new Font("Tahoma", Font.PLAIN, 12));
 
-            infoAboutNames.setBounds(70, 240, 350, 25);
+            infoAboutNames.setBounds(60, 240, 350, 25);
             infoAboutNames.setFont(new Font("Tahoma", Font.PLAIN, 12));
 
-            infoAboutGroups.setBounds(70, 300, 350, 25);
+            infoAboutGroups.setBounds(60, 300, 350, 25);
             infoAboutGroups.setFont(new Font("Tahoma", Font.PLAIN, 12));
 
-            sortBoxNames.setBounds(70, 270, 225, 30);
-            sortBoxGroups.setBounds(70, 330, 225, 30);
-            viewSavedSchedule.setBounds(575, 730, 170, 30);
-            writeInTable.setBounds(750,730,150,30);
+            sortBoxNames.setBounds(60, 270, 150, 25);
+            sortBoxGroups.setBounds(60, 330, 150, 25);
+
+            viewSavedSchedule.setBounds(393, 580, 145, 25);
+            writeInTable.setBounds(560, 580, 100, 25);
+
             modelOfCurrentlyChange = new DefaultTableModel();
             tableOfCurrentlyChange = new JTable(modelOfCurrentlyChange);
             refreshTableOfData();
@@ -457,8 +440,13 @@ public class Main {
             tableOfCurrentlyChange.setAutoCreateRowSorter(true);
 
             JPanel panelOfManagement = new JPanel();
-            panelOfManagement.setBackground(Color.lightGray);
+            JPanel borderPanel = new JPanel();
 
+            Border etched = BorderFactory.createEtchedBorder();
+            Border titled = BorderFactory.createTitledBorder(etched);
+            panelOfManagement.setBorder(titled);
+            borderPanel.setBorder(titled);
+            borderPanel.setBounds(0, 0, 1268, 705);
             panelOfManagement.add(openFormSubjects);
             panelOfManagement.add(openFormNames);
             panelOfManagement.add(openFormGroups);
@@ -466,34 +454,45 @@ public class Main {
             panelOfManagement.add(recoveryOfDate);
 
             panelOfManagement.setBounds(0, 0, 50, 800);
-            scrollOfTable.setBounds(400, 20, 800, 500);
+            scrollOfTable.setBounds(230, 20, 430, 400);
 
-            modelOfCurrentlyChange.addColumn("№");
-            modelOfCurrentlyChange.addColumn("Данные");
-            modelOfCurrentlyChange.addColumn("Часы");
+            JPanel panelOfTable = new JPanel();
+            panelOfTable.add(deleteSelectedRow);
+            panelOfTable.add(deleteTable);
+            panelOfTable.add(printTableOfHours);
+          //  panelOfTable.add(importOfTablePath);
+            panelOfTable.setBorder(titled);
+            panelOfTable.setBounds(670, 0, 50, 800);
+
+
+            String[] nameOfColumns = {"№", "Данные", "Часы"};
+            for (String counter : nameOfColumns) {
+                modelOfCurrentlyChange.addColumn(counter);
+            }
+
 
             JScrollPane scrollOfLog = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                     JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
             log.setLineWrap(true);
 
-            tableOfCurrentlyChange.getColumnModel().getColumn(1).setPreferredWidth(630);
-            tableOfCurrentlyChange.setRowHeight(30);
+            tableOfCurrentlyChange.getColumnModel().getColumn(1).setPreferredWidth(330);
+            tableOfCurrentlyChange.getColumnModel().getColumn(0).setPreferredWidth(30);
+            tableOfCurrentlyChange.getColumnModel().getColumn(2).setPreferredWidth(50);
+            tableOfCurrentlyChange.setRowHeight(20);
             scrollOfLog.getViewport().setBackground(Color.gray);
             scrollOfLog.getViewport().add(log);
-            scrollOfLog.setBounds(400, 520, 800, 200);
+            scrollOfLog.setBounds(230, 420, 430, 155);
 
-            readTable("Out.txt");
-            mainFrame.add(deleteTable);
-            mainFrame.add(writeInTable);
-            mainFrame.add(importOfTablePath);
-            mainFrame.add(printTableOfHours);
+            readTable(FILE_OF_OUT_SOURCE);
+
+            mainFrame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             mainFrame.add(panelOfManagement);
-            mainFrame.add(openCellOfTable);
+            mainFrame.add(panelOfTable);
+            mainFrame.add(writeInTable);
             mainFrame.add(scrollOfLog);
             mainFrame.add(infoAboutAll);
             mainFrame.add(infoAboutGroups);
             mainFrame.add(infoAboutNames);
-            mainFrame.add(deleteSelectedRow);
             mainFrame.add(boxNames);
             mainFrame.add(boxSubjects);
             mainFrame.add(boxGroups);
@@ -502,9 +501,9 @@ public class Main {
             mainFrame.add(addDateToFile);
             mainFrame.add(createSchedule);
             mainFrame.add(viewSavedSchedule);
-            mainFrame.getContentPane().add(sortOnClick);
-            mainFrame.add(new JLabel());
-            mainFrame.setSize(1280, 800);
+            mainFrame.add(sortOnClick);
+            mainFrame.add(borderPanel);
+            mainFrame.setSize(730, 650);
             mainFrame.setResizable(false);
             mainFrame.setLocationRelativeTo(null);
             mainFrame.setVisible(false);
@@ -540,7 +539,6 @@ public class Main {
 
             exportOfTables = new JButton("Экспорт в Excel");
             exportOfTables.addActionListener(new ExportTables());
-            // beginBuild = new JButton("Сохранить");
             beginBuild.addActionListener(new SaveForReturn());
             printSavedTable = new JButton("Печать или сохранить");
             printSavedTable.addActionListener(new PrintTable());
@@ -567,14 +565,14 @@ public class Main {
             callBoxDataOfTable();
             OutputDateForNew(FILE_OF_REPOSITORY);
             TableSchedule.getColumnModel().getColumn(0).setPreferredWidth(90);
-            TableSchedule.setRowHeight(40);
+            TableSchedule.setRowHeight(20);
         }
 
         public void countLinesOfTable() {
 
             linesCounter = 0;
 
-            try (LineNumberReader lnr = new LineNumberReader(new FileReader("Out.txt"))) {
+            try (LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_OUT_SOURCE))) {
                 while (null != lnr.readLine()) {
                     linesCounter++;
                 }
@@ -602,7 +600,7 @@ public class Main {
 
             countLinesGet = 0;
 
-            try (LineNumberReader lnr = new LineNumberReader(new FileReader("data.txt"))) {
+            try (LineNumberReader lnr = new LineNumberReader(new FileReader(FILE_OF_DATA))) {
                 while (null != lnr.readLine()) {
                     countLinesGet++;
                 }
@@ -718,7 +716,7 @@ public class Main {
             try {
                 BufferedReader reader = new BufferedReader(
                         new InputStreamReader(
-                                new FileInputStream("Out.txt"), Charset.forName(ENCODING_UTF8)));
+                                new FileInputStream(FILE_OF_OUT_SOURCE), Charset.forName(ENCODING_UTF8)));
 
                 while (dateFromFile != null) {
                     linesCounter--;
@@ -742,12 +740,11 @@ public class Main {
                 }
                 reader.close();
             } catch (Exception fileNotFound) {
-                // JOptionPane.showMessageDialog(null, "No provide"); // Will be exception by reason of "while" above.
             }
-            int valueOfDeleteRow = countRowFromFile + 1; //+1
-            while (valueOfDeleteRow <= (countLinesForStop - 1)) {
+            int valueOfDeleteRow = countRowFromFile + VARIABLE_MATH_OPERATION; //+1
+            while (valueOfDeleteRow <= (countLinesForStop - VARIABLE_MATH_OPERATION)) {
                 valueOfDeleteRow++;
-                modelOfCurrentlyChange.removeRow(countRowFromFile + 1); // +1
+                modelOfCurrentlyChange.removeRow(countRowFromFile + VARIABLE_MATH_OPERATION); // +1
             }
             dateFromFile = "";
         }
@@ -756,10 +753,10 @@ public class Main {
             countLinesGeneralForTable();
 
             String[] timeLessons = new String[]{"08:20 - 08:50",
-                                                "09:00 - 10:30",
-                                                "10:45 - 12:15",
-                                                "12:45 - 14:15",
-                                                "14:30 - 16:00"};
+                    "09:00 - 10:30",
+                    "10:45 - 12:15",
+                    "12:45 - 14:15",
+                    "14:30 - 15:55"};
 
             int counter = 0;
             int countLinesForStop = linesCount;
@@ -805,10 +802,10 @@ public class Main {
                 // JOptionPane.showMessageDialog(null, "No provide"); // Will be exception by reason of "while" above.
             }
 
-            int valueOfDeleteRow = countRowFromFile + 1; //+1
-            while (valueOfDeleteRow <= (countLinesForStop - 1)) {
+            int valueOfDeleteRow = countRowFromFile + VARIABLE_MATH_OPERATION; //+1
+            while (valueOfDeleteRow <= (countLinesForStop - VARIABLE_MATH_OPERATION)) {
                 valueOfDeleteRow++;
-                model.removeRow(countRowFromFile + 1); // +1
+                model.removeRow(countRowFromFile + VARIABLE_MATH_OPERATION); // +1
             }
         }
 
@@ -871,18 +868,17 @@ public class Main {
                             StringTokenizer skipObjectValue = new StringTokenizer(toStringOfValue);
                             String firstArgOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
                             String secondArgOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
-                            String emptyValueOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : ""; // never use, need for work of "thirdValue"
-                            String thirdValueOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
+                            String emptyValueOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : "";
+                            String thirdValueOfObject = skipObjectValue.hasMoreTokens() ? skipObjectValue.nextToken() : ""; // value used for search
 
 
                             StringTokenizer skipStringBoxes = new StringTokenizer(stringWriteSort);
                             String firstArg = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
                             String secondArg = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
-                            String emptyValue = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : ""; // never use, need for work of "thirdValue"
+                            String SearchValue = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : ""; // value used for search
                             String thirdValue = skipStringBoxes.hasMoreTokens() ? skipStringBoxes.nextToken() : "";
 
-
-                            if (firstArgOfObject.equals(firstArg) || thirdValueOfObject.equals(thirdValue)) {
+                            if (firstArgOfObject.equals(firstArg) || thirdValueOfObject.equals(SearchValue)) {
                                 TableSchedule.setValueAt(toStringOfValue, (counter - counter) + CountRowFromFile, counter);
 
                             } else {
@@ -896,12 +892,12 @@ public class Main {
             } catch (Exception fileNotFound) {
                 // JOptionPane.showMessageDialog(null, "No provide"); // Might be exception by reason of "while" above.
             }
-            int valueOfDeleteRow = CountRowFromFile + 1;
-            while (valueOfDeleteRow <= (countLinesForStop - 1)) {
+            int valueOfDeleteRow = CountRowFromFile + VARIABLE_MATH_OPERATION;
+            while (valueOfDeleteRow <= (countLinesForStop - VARIABLE_MATH_OPERATION)) {
                 valueOfDeleteRow++;
-                newModelForStorage.removeRow(CountRowFromFile + 1);
+                newModelForStorage.removeRow(CountRowFromFile + VARIABLE_MATH_OPERATION);
             }
-
+            condition = "";
         }
 
         public void refreshTable() {
@@ -917,13 +913,15 @@ public class Main {
 
         public void callBoxDataOfTable() {
             JComboBox<String> data = new JComboBox<>(new String[]{});
+            data.setEditable(true);
+
             Storage = new DefaultCellEditor(data);
             for (int x = 1; x <= 6; x++)
                 TableSchedule.getColumnModel().getColumn(x).setCellEditor(Storage);
             try {
                 BufferedReader reader = new BufferedReader(
                         new InputStreamReader(
-                                new FileInputStream("data.txt"), Charset.forName(ENCODING_UTF8)));
+                                new FileInputStream(FILE_OF_DATA), Charset.forName(ENCODING_UTF8)));
                 while (DataForTable != null) {
                     data.addItem(DataForTable);
                     DataForTable = reader.readLine();
@@ -936,15 +934,29 @@ public class Main {
         }
 
         public void showDate() {
-            String[] daysOfWeek = {"Пары",
-                    "Понедельник",
-                    "Вторник",
-                    "Среда",
-                    "Четверг",
-                    "Пятница",
-                    "Суббота"};
 
-            for (String counter : daysOfWeek) {
+         /*   String[] stringsOfGroups = new String[22];
+            int index = 0;
+            try {
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(
+                                new FileInputStream(FILE_OF_GROUPS), Charset.forName(ENCODING_UTF8)));
+
+                for(int i = 0; i < stringsOfGroups[index].length(); i++) {
+                    System.out.println(stringsOfGroups[index] + " ");
+                    stringsOfGroups[index] = reader.readLine();
+                    index++;
+                }
+            } catch (Exception ex) {
+
+            }*/
+            countLinesLocalForGroups();
+            int maxValue = listForGroups.length;
+            for (String counter : listForGroups) {
+               if(listForGroups.length == maxValue) {
+                   maxValue--;
+                   model.addColumn("Пары");
+               }
                 model.addColumn(counter);
             }
         }
@@ -958,7 +970,7 @@ public class Main {
         }
 
         public void clearFile() {
-            try (FileWriter write = new FileWriter("Out.txt")) {
+            try (FileWriter write = new FileWriter(FILE_OF_OUT_SOURCE)) {
                 write.write("");
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(null, MASSAGE_ERROR_NOT_FOUND_FILE);
@@ -1022,20 +1034,55 @@ public class Main {
     static class AddDate extends Main.TableDate implements ActionListener {
 
         public void actionPerformed(ActionEvent event) {
-
             countLinesGeneralForTable();
             System.out.print("adding line is --> [" + stringWrite + "]\n");
             countRows = tableOfCurrentlyChange.getRowCount();
 
-            modelOfCurrentlyChange.addRow(new Object[]{countRows + 1, stringWrite});
-            //saveTable();
+            modelOfCurrentlyChange.addRow(new Object[]{countRows + VARIABLE_MATH_OPERATION, stringWrite});
         }
 
     }
 
     static class CheckingAuth extends TableDate implements ActionListener {
+        static JFrame frameOfAuth;
+        JPanel panelOfComponents;
+
         public void actionPerformed(ActionEvent e) {
+            frameOfAuth = new JFrame("Окно регистрации");
+            frameOfAuth.setIconImage(Toolkit.getDefaultToolkit().getImage("src/main/java/iconOfFrame.png"));
+
+            frameOfAuth.setLayout(null);
             showPanelCreateAccount();
+            frameOfAuth.add(signUpAccount);
+            frameOfAuth.add(passwordUser);
+            frameOfAuth.add(infoEnter);
+            frameOfAuth.add(infoRepeat);
+            frameOfAuth.add(rule);
+            frameOfAuth.add(rules);
+            frameOfAuth.add(repeatPU);
+
+            String getNameOfLabel = infoAboutOperation.getText();
+            panelOfComponents = new JPanel();
+            panelOfComponents.setLayout(null);
+            panelOfComponents.setBounds(10, 10, 280, 290);
+            Border etched = BorderFactory.createEtchedBorder();
+            Border titled = BorderFactory.createTitledBorder(etched, getNameOfLabel);
+            panelOfComponents.setBorder(titled);
+
+            infoAboutOperation.setBounds(10, 10, 500, 25);
+            infoEnter.setBounds(35, 45, 150, 25);
+            passwordUser.setBounds(35, 75, 225, 25);
+            infoRepeat.setBounds(35, 105, 150, 25);
+            repeatPU.setBounds(35, 135, 225, 25);
+            rule.setBounds(35, 165, 225, 25);
+            rules.setBounds(35, 195, 225, 30);
+            signUpAccount.setBounds(35, 240, 150, 30);
+
+            frameOfAuth.setSize(320, 350);
+            frameOfAuth.add(panelOfComponents);
+            frameOfAuth.setResizable(false);
+            frameOfAuth.setLocationRelativeTo(null);
+            frameOfAuth.setVisible(true);
         }
     }
 
@@ -1069,6 +1116,10 @@ public class Main {
                 boxSubjects.setEnabled(false);
                 backUpOfData.setEnabled(false);
                 recoveryOfDate.setEnabled(false);
+                writeInTable.setEnabled(false);
+                deleteSelectedRow.setEnabled(false);
+                deleteTable.setEnabled(false);
+
                 authorization.dispose(); // using this method for clear RAM
                 mainFrame.setVisible(true);
                 log.append("Текущий пользователь: [Преподаватель].\n");
@@ -1084,7 +1135,7 @@ public class Main {
         }
     }
 
-    static class CheckingDate extends TableDate implements ActionListener {
+    static class CheckingDate extends CheckingAuth implements ActionListener {
         public void actionPerformed(ActionEvent e) {
 
             String passOriginal = passwordUser.getText();
@@ -1099,23 +1150,24 @@ public class Main {
                 passwordUser.setBorder(BorderFactory.createLineBorder(COLOR_BORDER_SUCCESS));
                 repeatPU.setBorder(BorderFactory.createLineBorder(COLOR_BORDER_SUCCESS));
                 System.out.print("Success! Access is allowed\n");
-                icon.setVisible(true);
                 checkSignIn = passOriginal;
                 passwordUser.setText("");
                 repeatPU.setText("");
 
-                try (FileWriter saveUserDate = new FileWriter("UserOfDate.txt")) {
+                try (FileWriter saveUserDate = new FileWriter(FILE_OF_USER_DATE)) {
                     saveUserDate.write(passOriginal + "\n");
+
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Данные не определенны");
                 }
                 signIn.setEnabled(true);
+                frameOfAuth.dispose();
             } else {
                 passwordUser.setBorder(BorderFactory.createLineBorder(COLOR_BORDER_WRONG));
                 repeatPU.setBorder(BorderFactory.createLineBorder(COLOR_BORDER_WRONG));
-                System.out.print("Error, values [" + passOriginal + "] " +
-                        "&" +
-                        " [" + passRepeat + "] don`t coincidence\n");
+                System.out.print("Error, values [" + passOriginal + "]" +
+                        " & " +
+                        "[" + passRepeat + "] don`t coincidence\n");
                 passwordUser.setText("");
                 repeatPU.setText("");
 
@@ -1156,7 +1208,7 @@ public class Main {
 
             }
             labelInfoFrame = new JLabel("Запишите дисциплину для сохранения");
-            addDate = new JButton("Сохранить");
+            addDate = new JButton("Записать");
 
             textForSubjects = new JTextField();
 
@@ -1193,6 +1245,7 @@ public class Main {
             FrameForSubjects.add(panelOfComponents);
             FrameForSubjects.setSize(510, 330);
 
+            FrameForSubjects.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             FrameForSubjects.setLocationRelativeTo(null);
             FrameForSubjects.setResizable(false);
             FrameForSubjects.setVisible(true);
@@ -1239,8 +1292,7 @@ public class Main {
 
             modelNames = new DefaultTableModel();
             tableOfData_names = new JTable(modelNames);
-            modelNames.addColumn("Список сохраненных имен: ");
-
+            modelNames.addColumn("Список сохраненных имен");
             tableOfData_names.getColumnModel().getColumn(0).setPreferredWidth(480);
             try {
                 BufferedReader reader = new BufferedReader(
@@ -1253,12 +1305,13 @@ public class Main {
             } catch (IOException ex) {
 
             }
+
             importOfData = new JButton(new ImageIcon("src/main/java/import_icon.png"));
             importOfData.setBounds(450, 50, 32, 32);
             importOfData.setContentAreaFilled(false);
             importOfData.addActionListener(new ImportOfNames());
             labelInfo = new JLabel("Запишите имя для сохранения");
-            addDate = new JButton("Сохранить");
+            addDate = new JButton("Записать");
             textForNames = new JTextField();
 
 
@@ -1298,7 +1351,7 @@ public class Main {
             frameForNames.setVisible(true);
 
             tableOfData_names.setAutoCreateRowSorter(true);
-
+            frameForNames.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             addDate.addActionListener(new SaveNames());
             frameForNames.setLocationRelativeTo(null);
             frameForNames.setResizable(false);
@@ -1325,7 +1378,6 @@ public class Main {
             modelNames.addRow(new Object[]{getTextFromTF});
 
         }
-
     }
 
     static class OpenFormGroups extends TableDate implements ActionListener {
@@ -1363,7 +1415,7 @@ public class Main {
 
             labelInfo = new JLabel("Запишите группу для сохранения");
 
-            addDate = new JButton("Сохранить");
+            addDate = new JButton("Записать");
 
             textForGroups = new JTextField();
             importOfData = new JButton(new ImageIcon("src/main/java/import_icon.png"));
@@ -1399,6 +1451,7 @@ public class Main {
             FrameForGroups = new JFrame("Добавить группу в список");
             FrameForGroups.setIconImage(Toolkit.getDefaultToolkit().getImage("src/main/java/iconOfFrame.png"));
 
+            FrameForGroups.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             FrameForGroups.add(deleteDateFromFiles);
             FrameForGroups.setSize(510, 330);
             FrameForGroups.add(panelOfComponents);
@@ -1434,7 +1487,7 @@ public class Main {
 
     static class BuildSchedule extends TableDate implements ActionListener {
         int indexOfReader = 0;
-        int valueOfNumber = 0;
+        float valueOfNumber = 0f;
 
         public void actionPerformed(ActionEvent event) {
 
@@ -1449,7 +1502,7 @@ public class Main {
             try {
                 BufferedReader reader = new BufferedReader(
                         new InputStreamReader(
-                                new FileInputStream("data.txt"), Charset.forName("UTF-8")));
+                                new FileInputStream(FILE_OF_DATA), Charset.forName("UTF-8")));
 
                 while ((read = reader.readLine()) != null) {
 
@@ -1472,33 +1525,33 @@ public class Main {
             int valueOfMiddle = countLinesGet / 2;
 
             try {
-                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream("DoneSchedule.txt"), "UTF8"));
+                BufferedWriter bufferWriter = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(FILE_OF_TABLE_BS), "UTF8"));
                 while (counterWriteEmptyValues != 6) {
-                    bw.write(" " + "\n");
+                    bufferWriter.write(" " + "\n");
                     counterWriteEmptyValues++;
                 }
 
                 int backReaderCount = (countLinesGet / 2);
 
-                for (int i = ((countLinesGet + 1) / 2); i <= countLinesGet; i++) {
+                for (int counterCell = ((countLinesGet + VARIABLE_MATH_OPERATION) / 2); counterCell <= countLinesGet; counterCell++) {
 
                     counterGoTo = counterGoTo + 2;
-                    bw.write(arrayOfStrings[i] + "\n");
+                    bufferWriter.write(arrayOfStrings[counterCell] + "\n");
 
                     backReaderCount--;
-                    bw.write(arrayOfStrings[backReaderCount] + "\n");
+                    bufferWriter.write(arrayOfStrings[backReaderCount] + "\n");
 
                     if (counterGoTo == 18) {
                         for (int z = 0; z < 6; z++) {
-                            bw.write(" " + "\n");
+                            bufferWriter.write(" " + "\n");
                         }
                         counterGoTo = 0;
                     }
                     valueCheck++;
                     if (valueCheck == valueOfMiddle) {
                         if (countLinesGet % 2 != 0) {
-                            bw.write(arrayOfStrings[((countLinesGet + 1) / 2)] + "\n");
+                            bufferWriter.write(arrayOfStrings[((countLinesGet + VARIABLE_MATH_OPERATION) / 2)] + "\n");
                         }
                         valueCheck++;
                     }
@@ -1507,7 +1560,7 @@ public class Main {
                     }
 
                 }
-                bw.flush();
+                bufferWriter.flush();
             } catch (Exception ex) {
 
             }
@@ -1553,11 +1606,11 @@ public class Main {
             frameOfTable.add(BorderLayout.CENTER, pane);
 
             frameOfTable.setSize(900, 500);
-
+            frameOfTable.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             frameOfTable.setVisible(true);
 
             TableSchedule.getColumnModel().getColumn(0).setPreferredWidth(90);
-            TableSchedule.setRowHeight(40);
+            TableSchedule.setRowHeight(20);
 
         }
 
@@ -1568,7 +1621,7 @@ public class Main {
                     writeData = tableOfCurrentlyChange.getValueAt(j, i).toString();
                     try {
                         BufferedWriter writingData = new BufferedWriter(new OutputStreamWriter(
-                                new FileOutputStream("Out.txt", true), "UTF8"));
+                                new FileOutputStream(FILE_OF_OUT_SOURCE, true), "UTF8"));
                         writingData.write(writeData + "\n");
                         writingData.flush();
                     } catch (IOException e) {
@@ -1585,9 +1638,9 @@ public class Main {
             String getValueColumns;
             try {
                 BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream("data.txt"), "UTF8"));
+                        new FileOutputStream(FILE_OF_DATA), "UTF8"));
                 for (int countRows = 0; countRows < rowsOfTable; countRows++) {
-                    int valueOfNumber = Integer.parseInt(tableOfCurrentlyChange.getValueAt(countRows, 2).toString());
+                    float valueOfNumber = Float.parseFloat(tableOfCurrentlyChange.getValueAt(countRows, 2).toString());
                     getValueColumns = tableOfCurrentlyChange.getValueAt(countRows, 1).toString();
                     valueOfNumber = valueOfNumber / 2;
                     for (int counter = 0; counter < valueOfNumber; counter++) {
@@ -1602,21 +1655,34 @@ public class Main {
 
 
         public void checkParameters() {
+            int attention = 0;
+            int errors = 0;
+            int countAttention = 0;
+            int countErrors = 0;
             int rowsOfTable = tableOfCurrentlyChange.getRowCount();
             for (int countRows = 0; countRows < rowsOfTable; countRows++) {
+
                 try {
-                    valueOfNumber = Integer.parseInt(tableOfCurrentlyChange.getValueAt(countRows, 2).toString());
+                    valueOfNumber = Float.parseFloat(tableOfCurrentlyChange.getValueAt(countRows, 2).toString());
                 } catch (Exception ex) {
-                    log.append("Колонки не должны быть пусты (" + (countRows + 1) + " - й номер колонки).\n");
+                    countErrors++;
+                    log.append("Ошибка: Колонки не должны быть пусты (" + (countRows + VARIABLE_MATH_OPERATION) + " - й номер колонки).\n");
+                    errors = +countErrors;
                 }
-
+                if (valueOfNumber == 0) {
+                    log.append("Недопустимое значение часов: [" + valueOfNumber + "].\n");
+                    errors++;
+                }
                 if (valueOfNumber % 2 != 0) {
-                    log.append("Некорректное значение часов в строке " + (countRows + 1) + ";\n" +
-                            "Может быть заменено на [" + (valueOfNumber + 1) + "] или " + "[" + (valueOfNumber - 1) + "]" +
-                            " (Автоматически заменено на " + (valueOfNumber - 1) + ").\n");
+                    countAttention++;
+                    log.append("Предупреждение: Некорректное значение часов в строке " + (countRows + VARIABLE_MATH_OPERATION) + ";\n" +
+                            "Может быть заменено на [" + (valueOfNumber + VARIABLE_MATH_OPERATION) + "] или " +
+                            "[" + (valueOfNumber - VARIABLE_MATH_OPERATION) + "]" +
+                            " (Автоматически заменено на " + (valueOfNumber - VARIABLE_MATH_OPERATION) + ").\n");
+                    attention = +countAttention;
                 }
-
             }
+            log.append("\nОшибок: " + errors + "; Предупреждений: " + attention + ";\n\n");
 
         }
     }
@@ -1633,7 +1699,7 @@ public class Main {
             JLabel interaction = new JLabel(new ImageIcon("src/main/java/interaction.png"));
 
             JButton uploadDataOfBackUp = new JButton("Выгрузить"); // output from program
-            JButton downloadDataOfBackUp = new JButton("Загрузить"); // input to program
+            JButton downloadDataOfBackUp = new JButton("Сохранить"); // input to program
 
             uploadDataOfBackUp.addActionListener(new Unload());
             downloadDataOfBackUp.addActionListener(new Download());
@@ -1657,7 +1723,8 @@ public class Main {
             frameOfBackUp.add(iconDownload);
             frameOfBackUp.add(iconUnload);
 
-            frameOfBackUp.setSize(500, 250);
+            frameOfBackUp.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            frameOfBackUp.setSize(490, 250);
             frameOfBackUp.setResizable(false);
             frameOfBackUp.setLocationRelativeTo(null);
             frameOfBackUp.setVisible(true);
@@ -1672,7 +1739,7 @@ public class Main {
                     "NamesList",
                     "GroupsList",
                     "SubjectsList",
-                    "Out"};
+                    "Out_source"};
 
 
             progressBar.setStringPainted(true);
@@ -1689,13 +1756,13 @@ public class Main {
                 Unload("[" + listFiles_Storage[2] + "].txt", FILE_OF_NAMES);
                 Unload("[" + listFiles_Storage[3] + "].txt", FILE_OF_GROUPS);
                 Unload("[" + listFiles_Storage[4] + "].txt", FILE_OF_SUBJECTS);
-                Unload("[" + listFiles_Storage[5] + "].txt", "Out.txt");
+                Unload("[" + listFiles_Storage[5] + "].txt", FILE_OF_OUT_SOURCE);
 
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Не удалось завершить операцию! ");
                 progressBar.setVisible(false);
             }
-            JOptionPane.showMessageDialog(null, "Данные выгружены! ");
+            JOptionPane.showMessageDialog(null, "Данные выгружены!");
             frameOfBackUp.dispose();
         }
     }
@@ -1708,7 +1775,7 @@ public class Main {
                     "NamesList",
                     "GroupsList",
                     "SubjectsList",
-                    "Out"};
+                    "Out_source"};
 
             progressBar.setStringPainted(true);
             progressBar.setMinimum(0);
@@ -1724,13 +1791,15 @@ public class Main {
                 Unload(FILE_OF_NAMES, "[" + listFiles_Storage[2] + "].txt");
                 Unload(FILE_OF_GROUPS, "[" + listFiles_Storage[3] + "].txt");
                 Unload(FILE_OF_SUBJECTS, "[" + listFiles_Storage[4] + "].txt");
-                Unload("Out.txt", "[" + listFiles_Storage[5] + "].txt");
+                Unload(FILE_OF_OUT_SOURCE, "[" + listFiles_Storage[5] + "].txt");
+
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Не удалось завершить операцию! ");
                 progressBar.setVisible(false);
             }
 
-            JOptionPane.showMessageDialog(null, "Данные загружены! ");
+            JOptionPane.showMessageDialog(null, "Данные выгружены." +
+                    "Необходимо перезапустить программу.");
 
             frameOfBackUp.dispose();
         }
@@ -1742,10 +1811,10 @@ public class Main {
 
     static class DeleteSelectedRow extends TableDate implements ActionListener {
         public void actionPerformed(ActionEvent event) {
-            if (tableOfCurrentlyChange.getSelectedRow() != -1) {
+
+            if (tableOfCurrentlyChange.getSelectedRow() != -VARIABLE_MATH_OPERATION) {
                 modelOfCurrentlyChange.removeRow(tableOfCurrentlyChange.getSelectedRow());
             }
-            // modelOfCurrentlyChange.addRow(new Object[]{countRows});
         }
     }
 
@@ -1784,7 +1853,7 @@ public class Main {
             frameOfRecovery.add(renouncement);
             frameOfRecovery.add(infoCreateNewData);
 
-            frameOfRecovery.setSize(500, 300);
+            frameOfRecovery.setSize(490, 300);
             frameOfRecovery.setResizable(false);
             frameOfRecovery.setLocationRelativeTo(null);
             frameOfRecovery.setVisible(true);
@@ -1808,8 +1877,7 @@ public class Main {
                     "GroupsList.txt",
                     "SubjectsList.txt",
                     "Check.txt",
-                    "TableOfHours.txt",
-                    "DataNotes.txt"};
+                    "TableOfHours.txt"};
 
             progressOfRecovery.setStringPainted(true);
             progressOfRecovery.setMinimum(0);
@@ -1868,7 +1936,7 @@ public class Main {
             try (FileOutputStream fileExcel = new FileOutputStream(nameFile)) {
                 workbook.write(fileExcel);
                 log.append("Экспорт данных завершен!\n" +
-                           "Данные сохраненны в [" + nameFile + "] \n");
+                        "Данные сохраненны в [" + nameFile + "] \n");
             } catch (IOException e) {
                 log.append("Не удалось завершить экспорт данных!\n");
             }
@@ -1906,24 +1974,26 @@ public class Main {
             }
             try (FileOutputStream fileExcel = new FileOutputStream(nameFile)) {
                 workbook.write(fileExcel);
-                 log.append("Экспорт данных завершен!\n" +
-                            "Данные сохраненны в [" + nameFile + "] \n");
+                log.append("Экспорт данных завершен!\n" +
+                        "Данные сохраненны в [" + nameFile + "] \n");
             } catch (IOException e) {
                 log.append("Не удалось завершить экспорт данных!\n");
             }
         }
     }
+
     static class SaveForReturn extends TableDate implements ActionListener {
         public void actionPerformed(ActionEvent event) {
+
             String checkForAvailability = "";
-            try (FileReader read = new FileReader("Check.txt")) {
-                BufferedReader buffer =  new BufferedReader(read);
+            try (FileReader read = new FileReader(FILE_CHECK_SAVE_DATE)) {
+                BufferedReader buffer = new BufferedReader(read);
                 checkForAvailability = buffer.readLine();
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(null, "Данные не могут быть записаны");
             }
 
-            if(checkForAvailability != null) {
+            if (checkForAvailability != null) {
                 Object[] options = {"Да",
                         "Нет"};
                 int userChoice = JOptionPane.showOptionDialog(frameOfTable,
@@ -1939,20 +2009,23 @@ public class Main {
                     saveData();
                 } else {
                     JOptionPane.showMessageDialog(null, "Сохранение отменено!");
+                    log.append("Сохранение отменено!\n");
                 }
             }
 
-            String date = "data of file is`n empty";
+            String data = "[----------- data isn`t empty -----------]";
+
             try (FileWriter write = new FileWriter(FILE_CHECK_SAVE_DATE)) {
-                write.write(date);
+                write.write(data + "\n");
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(null, "Данные не могут быть записаны");
                 log.append("Ошибка при сохранении расписания!\n");
             }
-            if(checkForAvailability == null) {
+
+            if (checkForAvailability == null) {
                 saveData();
-                JOptionPane.showMessageDialog(null, "Сохранение завершено!");
             }
+
         }
 
         public void saveData() {
@@ -1980,12 +2053,14 @@ public class Main {
             log.append("Таблица сохранена!\n");
         }
     }
+
     static class SortDate extends TableDate implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             condition = "TurnOnSort";
             viewSchedule();
         }
     }
+
     static class ViewSaveSchedule extends TableDate implements ActionListener {
 
         public void actionPerformed(ActionEvent event) {
@@ -1993,27 +2068,166 @@ public class Main {
         }
 
     }
-    static class FillTable extends TableDate implements ActionListener {
+
+    static class FillTable extends TableDate implements ActionListener { ///// here change
+        ArrayList<String> arrayRepeatedGroups;
+        ArrayList<String> arrayRepeatedSubjects;
+        ArrayList<String> arrayRepeatedNames;
+        Object dataOfColumnB;
+        Object dataOfColumnL;
+        Object dataOfColumnO;
         public void actionPerformed(ActionEvent event) {
             countLinesLocalForName();
             countLinesLocalForObjects();
             countLinesLocalForGroups();
-            String stringBuild = "";
-            int maxValue = 0;
 
-            maxValue = Math.min(Math.min(listForGroups.length, listForSubjects.length), listForNames.length);
-            System.out.println(maxValue + " is min");
-            for(int index = 0; index < maxValue; index++) {
-                stringBuild = listForSubjects[index] + "  " + listForNames[index] + " " + listForGroups[index];
-                System.out.println(stringBuild);
-                modelOfCurrentlyChange.addRow(new Object[] {index + 1, stringBuild});
+            String nameFile = "";
+
+            arrayRepeatedGroups = new ArrayList<>();
+            arrayRepeatedSubjects = new ArrayList<>();
+            arrayRepeatedNames = new ArrayList<>();
+            JFileChooser fileOpen = new JFileChooser();
+
+            int ret = fileOpen.showDialog(null, "Выбрать файл");
+            if (ret == JFileChooser.APPROVE_OPTION) {
+                File file = fileOpen.getSelectedFile();
+                nameFile = file.getAbsolutePath();
+                System.out.println(nameFile);
             }
+
+            try {
+                File file = new File(nameFile);
+                Workbook wb = WorkbookFactory.create(file);
+
+
+                Object hours;
+                int count = 1;
+                int indexForColumn = 10;
+                while (indexForColumn != 270) {
+
+
+                    dataOfColumnB = wb.getSheetAt(5).getRow(indexForColumn - 1).
+                            getCell(CellReference.convertColStringToIndex("B"));
+                    dataOfColumnL = wb.getSheetAt(5).getRow(indexForColumn - 1).
+                            getCell(CellReference.convertColStringToIndex("L"));
+                    dataOfColumnO = wb.getSheetAt(5).getRow(indexForColumn - 1).
+                            getCell(CellReference.convertColStringToIndex("O"));
+                    hours = wb.getSheetAt(5).getRow(indexForColumn - 1).
+                            getCell(CellReference.convertColStringToIndex("D"));
+
+
+                    writeDataGroups(dataOfColumnO.toString());
+                    writeDataSubjects(dataOfColumnB.toString());
+                    writeDataNames(dataOfColumnL.toString());
+
+                    indexForColumn++;
+
+                    arrayRepeatedGroups.add(dataOfColumnO.toString());
+                    arrayRepeatedSubjects.add(dataOfColumnB.toString());
+                    arrayRepeatedNames.add(dataOfColumnL.toString());
+
+                    System.out.println("[" + dataOfColumnB + " " + dataOfColumnL + " " + dataOfColumnO + "]");
+                    Object wordBuild = dataOfColumnO + " " + dataOfColumnB + " " + dataOfColumnL;
+                    modelOfCurrentlyChange.addRow(new Object[]{count, wordBuild,hours});
+                    count++;
+                }
+                System.out.println("****************************************************************");
+
+
+
+            } catch (Exception e) {
+                System.out.println("exception");
+                e.printStackTrace();
+            }
+
+
+        }
+
+        public void writeDataGroups(String groups) {
+
+            try (FileWriter write = new FileWriter(FILE_OF_GROUPS)) {
+
+
+                System.out.println("begin removing duplicated...");
+                HashSet hs = new HashSet();
+                hs.addAll(arrayRepeatedGroups);
+                arrayRepeatedGroups.clear();
+                arrayRepeatedGroups.addAll(hs);
+                for (int i = 0; i < arrayRepeatedGroups.size(); i ++) {
+                    System.out.println("end removing duplicated: \n" + arrayRepeatedGroups.get(i));
+                    groups = arrayRepeatedGroups.get(i);
+                    write.write(groups + "\n");
+                }
+
+            } catch (IOException e) {
+            }
+            countLinesLocalForGroups();
+            boxGroups.removeAllItems();
+            sortBoxGroups.removeAllItems();
+            for(String counter : listForGroups) {
+                boxGroups.addItem(counter);
+                sortBoxGroups.addItem(counter);
+            }
+
+        }
+
+        public void writeDataSubjects(String subjects) {
+
+            try (FileWriter write = new FileWriter(FILE_OF_SUBJECTS)) {
+
+
+                System.out.println("begin removing duplicated...");
+                HashSet hs = new HashSet();
+                hs.addAll(arrayRepeatedSubjects);
+                arrayRepeatedSubjects.clear();
+                arrayRepeatedSubjects.addAll(hs);
+                for (int i = 0; i < arrayRepeatedSubjects.size(); i ++) {
+                    System.out.println("end removing duplicated: \n" + arrayRepeatedSubjects.get(i));
+                    subjects = arrayRepeatedSubjects.get(i);
+                    write.write(subjects + "\n");
+                }
+
+            } catch (IOException e) {
+            }
+            countLinesLocalForObjects();
+            boxSubjects.removeAllItems();
+            for(String counter : listForSubjects) {
+                boxSubjects.addItem(counter);
+            }
+
+        }
+        public void writeDataNames(String names) {
+
+            try (FileWriter write = new FileWriter(FILE_OF_NAMES)) {
+
+
+                System.out.println("begin removing duplicated...");
+                HashSet hs = new HashSet();
+                hs.addAll(arrayRepeatedNames);
+                arrayRepeatedNames.clear();
+                arrayRepeatedNames.addAll(hs);
+                for (int i = 0; i < arrayRepeatedNames.size(); i ++) {
+                    System.out.println("end removing duplicated: \n" + arrayRepeatedNames.get(i));
+                    names = arrayRepeatedNames.get(i);
+                    write.write(names + "\n");
+                }
+
+            } catch (IOException e) {
+            }
+            countLinesLocalForName();
+            boxNames.removeAllItems();
+            sortBoxNames.removeAllItems();
+            for(String counter : listForNames) {
+                boxNames.addItem(counter);
+                sortBoxNames.addItem(counter);
+            }
+
         }
     }
     static class ImportOfSubjects extends OpenFormSubject implements ActionListener {
         public void actionPerformed(ActionEvent event) {
             String nameFile = "";
-
+            ArrayList<String> arrayRepeated = new ArrayList<>();
             JFileChooser fileOpen = new JFileChooser();
             int ret = fileOpen.showDialog(null, "Выбрать файл");
             if (ret == JFileChooser.APPROVE_OPTION) {
@@ -2023,30 +2237,42 @@ public class Main {
             }
 
             try {
+                File file = new File(nameFile);
+                Workbook wb = WorkbookFactory.create(file);
+                Object dataOfColumn;
+                int indexForColumn = 10;
+                while (indexForColumn != 270) {
+                    dataOfColumn = wb.getSheetAt(5).getRow(indexForColumn - 1).
+                            getCell(CellReference.convertColStringToIndex("B"));
+                    indexForColumn++;
+                    arrayRepeated.add(dataOfColumn.toString());
+                    System.out.println("[" + dataOfColumn + "]");
 
-                File f = new File(nameFile);
-                Workbook wb = WorkbookFactory.create(f);
-                Object ob = wb.getSheetAt(0).getRow(2).getCell(CellReference.convertColStringToIndex("B"));
-                System.out.println(ob + " &&&&&& "); // yeeah
-                Sheet mySheet = wb.getSheetAt(0);
-                Iterator<Row> rowIter = mySheet.rowIterator();
-                for (Iterator<Row> rowIterator = mySheet.rowIterator(); rowIterator.hasNext(); ) {
-                    for (Iterator<Cell> cellIterator = ((Row) rowIterator.next()).cellIterator(); cellIterator.hasNext(); ) {
-                        String data = ((Cell) cellIterator.next()).toString();
-                        System.out.println(data);
-                        modelSubjects.addRow(new Object[] {data});
-                        writeDate(data);
-                    }
-                    System.out.println("****************************************************************");
                 }
+                System.out.println("****************************************************************");
+
+                System.out.println("begin removing duplicated...");
+                HashSet hs = new HashSet();
+                hs.addAll(arrayRepeated);
+                arrayRepeated.clear();
+                arrayRepeated.addAll(hs);
+                for (int i = 0; i < arrayRepeated.size(); i ++) {
+                    System.out.println("end removing duplicated: \n" + arrayRepeated.get(i));
+                    dataOfColumn = arrayRepeated.get(i);
+                    modelSubjects.addRow(new Object[]{dataOfColumn});
+                    writeDate(arrayRepeated.get(i));
+                }
+
             } catch (Exception e) {
                 System.out.println("exception");
                 e.printStackTrace();
             }
+
             boxSubjects.removeAllItems();
             for(String counter : listForSubjects) {
                 boxSubjects.addItem(counter);
             }
+
         }
 
     }
@@ -2054,6 +2280,7 @@ public class Main {
         public void actionPerformed(ActionEvent event) {
             String nameFile = "";
 
+            ArrayList<String> arrayRepeated = new ArrayList<>();
             JFileChooser fileOpen = new JFileChooser();
             int ret = fileOpen.showDialog(null, "Выбрать файл");
             if (ret == JFileChooser.APPROVE_OPTION) {
@@ -2063,26 +2290,37 @@ public class Main {
             }
 
             try {
+                File file = new File(nameFile);
+                Workbook wb = WorkbookFactory.create(file);
+                Object dataOfColumn;
+                int indexForColumn = 10;
+                while (indexForColumn != 270) {
+                    dataOfColumn = wb.getSheetAt(5).getRow(indexForColumn - 1).
+                            getCell(CellReference.convertColStringToIndex("O"));
+                    indexForColumn++;
+                    arrayRepeated.add(dataOfColumn.toString());
+                    System.out.println("[" + dataOfColumn + "]");
 
-                File f = new File(nameFile);
-                Workbook wb = WorkbookFactory.create(f);
-                Object ob = wb.getSheetAt(0).getRow(2).getCell(CellReference.convertColStringToIndex("B"));
-                System.out.println(ob + " &&&&&& "); // yeeah
-                Sheet mySheet = wb.getSheetAt(0);
-                Iterator<Row> rowIter = mySheet.rowIterator();
-                for (Iterator<Row> rowIterator = mySheet.rowIterator(); rowIterator.hasNext(); ) {
-                    for (Iterator<Cell> cellIterator = ((Row) rowIterator.next()).cellIterator(); cellIterator.hasNext(); ) {
-                        String data = ((Cell) cellIterator.next()).toString();
-                        System.out.println(data);
-                        modelGroups.addRow(new Object[] {data});
-                        writeDate(data);
-                    }
-                    System.out.println("****************************************************************");
                 }
+                System.out.println("****************************************************************");
+
+                System.out.println("begin removing duplicated...");
+                HashSet hs = new HashSet();
+                hs.addAll(arrayRepeated);
+                arrayRepeated.clear();
+                arrayRepeated.addAll(hs);
+                for (int i = 0; i < arrayRepeated.size(); i ++) {
+                    System.out.println("end removing duplicated: \n" + arrayRepeated.get(i));
+                    dataOfColumn = arrayRepeated.get(i);
+                    modelGroups.addRow(new Object[]{dataOfColumn});
+                    writeDate(arrayRepeated.get(i));
+                }
+
             } catch (Exception e) {
                 System.out.println("exception");
                 e.printStackTrace();
             }
+
             boxGroups.removeAllItems();
             sortBoxGroups.removeAllItems();
             for(String counter : listForGroups) {
@@ -2095,7 +2333,7 @@ public class Main {
     static class ImportOfNames extends OpenFormNames implements ActionListener {
         public void actionPerformed(ActionEvent event) {
             String nameFile = "";
-
+            ArrayList<String> arrayRepeated = new ArrayList<>();
             JFileChooser fileOpen = new JFileChooser();
             int ret = fileOpen.showDialog(null, "Выбрать файл");
             if (ret == JFileChooser.APPROVE_OPTION) {
@@ -2105,26 +2343,40 @@ public class Main {
             }
 
             try {
+                File file = new File(nameFile);
+                Workbook wb = WorkbookFactory.create(file);
+                Object dataOfColumn;
+                int indexForColumn = 10;
 
-                File f = new File(nameFile);
-                Workbook wb = WorkbookFactory.create(f);
-                Object ob = wb.getSheetAt(0).getRow(2).getCell(CellReference.convertColStringToIndex("B"));
-                System.out.println(ob + " &&&&&& "); // yeeah
-                Sheet mySheet = wb.getSheetAt(0);
-                Iterator<Row> rowIter = mySheet.rowIterator();
-                for (Iterator<Row> rowIterator = mySheet.rowIterator(); rowIterator.hasNext(); ) {
-                    for (Iterator<Cell> cellIterator = ((Row) rowIterator.next()).cellIterator(); cellIterator.hasNext(); ) {
-                        String data = ((Cell) cellIterator.next()).toString();
-                        System.out.println(data);
-                        modelNames.addRow(new Object[]{data});
-                        writeDate(data);
-                    }
-                    System.out.println("****************************************************************");
+                while (indexForColumn != 270) {
+
+                    dataOfColumn = wb.getSheetAt(5).getRow(indexForColumn - 1).
+                                   getCell(CellReference.convertColStringToIndex("L"));
+
+                    indexForColumn++;
+                    arrayRepeated.add(dataOfColumn.toString());
+                    System.out.println("[" + dataOfColumn + "]" + indexForColumn);
+
                 }
+                System.out.println("****************************************************************");
+
+                System.out.println("begin removing duplicated...");
+                HashSet hs = new HashSet();
+                hs.addAll(arrayRepeated);
+                arrayRepeated.clear();
+                arrayRepeated.addAll(hs);
+                for (int i = 0; i < arrayRepeated.size(); i ++) {
+                    System.out.println("end removing duplicated: \n" + arrayRepeated.get(i));
+                    dataOfColumn = arrayRepeated.get(i);
+                    modelNames.addRow(new Object[]{dataOfColumn});
+                    writeDate(arrayRepeated.get(i));
+                }
+
             } catch (Exception e) {
                 System.out.println("exception");
                 e.printStackTrace();
             }
+
             boxNames.removeAllItems();
             sortBoxNames.removeAllItems();
             for(String counter : listForNames) {
@@ -2178,7 +2430,7 @@ class SaveNames extends Main.OpenFormNames implements ActionListener {
             return;
         }
         else
-            labelInfo.setText("ФИО '" + textForNames.getText() + "' сохранено");
+        labelInfo.setText("ФИО '" + textForNames.getText() + "' сохраненно");
         log.append("Данные преподавателя " + save + " сохраненны!\n");
         writeDate(save);
         textForNames.setText("");
@@ -2186,7 +2438,6 @@ class SaveNames extends Main.OpenFormNames implements ActionListener {
 
         sortBoxNames.removeAllItems();
         boxNames.removeAllItems();
-
         for(String counter : listForNames) {
             boxNames.addItem(counter);
             sortBoxNames.addItem(counter);
@@ -2216,10 +2467,10 @@ class SaveSubjects extends Main.OpenFormSubject implements ActionListener { /// 
     }
 }
 
-class DeleteDataOfGroups extends Main.TableDate implements ActionListener {
+class DeleteDataOfGroups extends Main.OpenFormGroups implements ActionListener {
     public void actionPerformed(ActionEvent event) {
         Object[] options = {"Да",
-                "Нет"};
+                            "Нет"};
 
         int userChoice = JOptionPane.showOptionDialog(frameOfTable,
                 "Вы действительно хотите удалить все данные?",
@@ -2241,15 +2492,22 @@ class DeleteDataOfGroups extends Main.TableDate implements ActionListener {
                 JOptionPane.showMessageDialog(null, "Удаление не завершено по неизвестной причине");
             }
             JOptionPane.showMessageDialog(null, "Удаление завершено!");
+            sortBoxGroups.removeAllItems();
+            boxGroups.removeAllItems();
+            modelGroups.setRowCount(0);
+            for(String counter : listForGroups) {
+                boxGroups.addItem(counter);
+                sortBoxGroups.addItem(counter);
+            }
         }
         else
             JOptionPane.showMessageDialog(null, "Удаление отменено!");
     }
 }
-class DeleteDataOfNames extends Main.TableDate implements ActionListener {
+class DeleteDataOfNames extends Main.OpenFormNames implements ActionListener {
     public void actionPerformed(ActionEvent event) {
         Object[] options = {"Да",
-                "Нет"};
+                            "Нет"};
 
         int userChoice = JOptionPane.showOptionDialog(frameOfTable,
                 "Вы действительно хотите удалить все данные?",
@@ -2271,12 +2529,20 @@ class DeleteDataOfNames extends Main.TableDate implements ActionListener {
                 JOptionPane.showMessageDialog(null, "Удаление не завершено по неизвестной причине");
             }
             JOptionPane.showMessageDialog(null, "Удаление завершено!");
+            sortBoxNames.removeAllItems();
+            boxNames.removeAllItems();
+            modelNames.setRowCount(0);
+            for(String counter : listForNames) {
+                boxNames.addItem(counter);
+                sortBoxNames.addItem(counter);
+            }
         }
         else
             JOptionPane.showMessageDialog(null, "Удаление отменено!");
     }
+
 }
-class DeleteDataOfSubjects extends Main.TableDate implements ActionListener {
+class DeleteDataOfSubjects extends Main.OpenFormSubject implements ActionListener {
     public void actionPerformed(ActionEvent event) {
         Object[] options = {"Да",
                              "Нет"};
@@ -2301,6 +2567,12 @@ class DeleteDataOfSubjects extends Main.TableDate implements ActionListener {
                 JOptionPane.showMessageDialog(null, "Удаление не завершено по неизвестной причине");
             }
             JOptionPane.showMessageDialog(null, "Удаление завершено!");
+
+            boxSubjects.removeAllItems();
+            modelSubjects.setRowCount(0);
+            for(String counter : listForSubjects) {
+                boxSubjects.addItem(counter);
+            }
         }
         else
             JOptionPane.showMessageDialog(null, "Удаление отменено!");
